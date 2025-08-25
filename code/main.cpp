@@ -1,4 +1,7 @@
 #include <iostream>
+#include <stdexcept>
+#include <limits>  
+
 
 #ifdef _WIN32
 #define CLEAR "cls"
@@ -41,7 +44,7 @@ int sumar(int num1, int num2);
 int restar(int num1,int num2);
 int multiplicar(int num1,int num2);
 int dividir(int num1,int num2);
-int modulo (int num1, int num2);
+int residuo (int num1, int num2);
 int potencia(int num1, int n);
 bool validarID(int &id);
 
@@ -74,6 +77,11 @@ int main(){
                 case MULTIPLICACION:
                     resultadoMultiplicacion();
                     break;
+                
+                case RESIDUO:
+                    resultadoResiduo();
+                    break;
+
                 case POTENCIA:
                     resultadoPotencia();
                     break;
@@ -87,7 +95,7 @@ int main(){
                     opcionValida=0;
                     break;
             }
-        
+
         if (opcionValida==1)
         {
             cout << "Presionar entrar para continuar...";
@@ -107,38 +115,75 @@ int main(){
 
 void pedirDatos()
 {
-    cout << "Nombre del usuario[" <<(contadorProcesos+1)<< "]: " ;
-    cin >> usuario[contadorProcesos].nombre;
-    do{
-        usuario[contadorProcesos].tme=5;
-        cout << "Tiempo máximo estimado (TME) usuario[" <<(contadorProcesos+1)<< "]: ";
-        cin >> usuario[contadorProcesos].tme;
-    }while(usuario[contadorProcesos].tme <= 0);
+    if (contadorProcesos >= TAM_PROCESOS) {
+        cout << " No se pueden registrar más usuarios. Límite alcanzado." << endl;
+        return;
+    }
 
-    do{
-        cout << "ID del proceso del usuario["<<(contadorProcesos+1)<<"]: ";
-        cin >> usuario[contadorProcesos].id;
-    }while(validarID(usuario[contadorProcesos].id)==false);
+    cin.exceptions(ios::failbit | ios::badbit);
+
+    cout << "Nombre del usuario[" << (contadorProcesos+1) << "]: ";
+    cin >> usuario[contadorProcesos].nombre;
+
+    // Pedir TME
+    while (true) {
+        try {
+            cout << "Tiempo máximo estimado (TME) usuario[" << (contadorProcesos+1) << "]: ";
+            cin >> usuario[contadorProcesos].tme;
+
+            if (usuario[contadorProcesos].tme <= 0) {
+                throw invalid_argument("El TME debe ser mayor a 0.");
+            }
+            break; 
+        } catch (const ios_base::failure &e) {
+            cerr << "Error: no ingresaste un número válido." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        } catch (const invalid_argument &e) {
+            cerr << "Error: " << e.what() << endl;
+        }
+    }
+
+    // Pedir ID
+    while (true) {
+        try {
+            int tempID; // 🔹 variable temporal
+            cout << "ID del proceso del usuario[" << (contadorProcesos+1) << "]: ";
+            cin >> tempID;
+
+            if (!validarID(tempID)) {
+                throw invalid_argument("El ID ya existe, ingresa otro.");
+            }
+
+        usuario[contadorProcesos].id = tempID; // ✅ se asigna solo si es válido
+        break; 
+    } catch (const ios_base::failure &e) {
+        cerr << "Error: no ingresaste un número válido." << endl;
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    } catch (const invalid_argument &e) {
+        cerr << "Error: " << e.what() << endl;
+    }
+}
+
     cout << endl;
     contadorProcesos++;
 }
 
+
 bool validarID(int &id)
 {
-    for (int i = 0; i < contadorProcesos; i++)
+    for (int i = 0; i < contadorProcesos; i++)  
     {
         if (id == usuario[i].id)
         {
             cout << "Número de identificación repetido" << endl;
-            return false;
-        }
-        else
-        {
-            return true;
+            return false; 
         }
     }
-    return true;
+    return true; 
 }
+
 
 void mostrarMenu()
 {
@@ -156,12 +201,35 @@ void mostrarMenu()
 
 }
 
-void pedirValores (int &num1, int &num2)
+void pedirValores(int &num1, int &num2)
 {
-    cout << "Dame el valor de a= ";
-    cin >> num1;
-    cout << "Dame el valor de b= ";
-    cin >> num2;
+    cin.exceptions(ios::failbit | ios::badbit);
+
+    // Pedir primer valor
+    while (true) {
+        try {
+            cout << "Dame el valor de a= ";
+            cin >> num1;
+            break; 
+        } catch (const ios_base::failure &e) {
+            cerr << "Error: debes ingresar un número entero válido." << endl;
+            cin.clear(); // limpiar flags de error
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // descartar lo malo
+        }
+    }
+
+    // Pedir segundo valor
+    while (true) {
+        try {
+            cout << "Dame el valor de b= ";
+            cin >> num2;
+            break;
+        } catch (const ios_base::failure &e) {
+            cerr << "Error: debes ingresar un número entero válido." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        }
+    }
 }
 
 void resultadoSuma()
@@ -184,17 +252,18 @@ void resultadoResta()
 
 void resultadoDivision()
 {
-    //Variables para entrada de datos;
     int a, b, resultado;
-    pedirValores(a,b);
-    if (b==0){
-        resultado=0;
+
+    try {
+        pedirValores(a, b);
+        resultado = dividir(a, b); // 🔹 puede lanzar excepción
+        cout << a << " / " << b << " = " << resultado << endl;
     }
-    else{
-        resultado=dividir(a,b);
+    catch (const invalid_argument &e) {
+        cerr << e.what() << endl; 
     }
-    cout << a << " / " << b << " = " << resultado << endl;
 }
+
 
 void resultadoMultiplicacion ()
 {
@@ -205,12 +274,12 @@ void resultadoMultiplicacion ()
     cout << a << " * " << b << " = " << resultado << endl;
 }
 
-void resultadoModulo()
+void resultadoResiduo()
 {
     //Variables para entrada de datos;
     int a, b, resultado;
     pedirValores(a,b);
-    resultado=modulo(a,b);
+    resultado=residuo(a,b);
     cout << a << " % " << b << " = " << resultado << endl;
 }
 
@@ -244,9 +313,10 @@ int restar(int num1, int num2)
 
 int dividir(int num1, int num2)
 {
-    int resultadoDivision;
-    resultadoDivision = num1/num2;
-    return resultadoDivision;
+    if (num2 == 0) {
+        throw invalid_argument("Error: división entre cero.");
+    }
+    return num1 / num2;
 }
 
 int multiplicar(int num1, int num2)
@@ -256,18 +326,18 @@ int multiplicar(int num1, int num2)
     return resultadoMultiplicacion;
 }
 
-int modulo(int num1, int num2)
+int residuo(int num1, int num2)
 {
-    int resultadoModulo;
-    resultadoModulo = num1%num2;
-    return resultadoModulo;
+    int resultadoResiduo;
+    resultadoResiduo = num1%num2;
+    return resultadoResiduo;
 }
 
 int potencia(int num1, int n)
 {
     for(int i=0; i < n; i++)
     {
-        num1*=num1;
+        num1+=num1;
     }
 
     return num1;
