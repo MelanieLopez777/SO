@@ -1,0 +1,14 @@
+# Ignorar carpeta .vscode
+.vscode/
+
+# Ignorar carpeta build
+build/
+
+# Ignorar archivos ejecutables de Windows
+*.exe
+
+# Ignorar archivos binarios comunes
+*.out
+*.app
+*.run
+*.bin

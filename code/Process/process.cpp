@@ -1,19 +1,10 @@
-#include <iomanip>
-#include <iostream>
-#include <iomanip>
-#include "structures.h"
-#include "operations.cpp"
-#include "queue/queue.h"
+#include "process.h"
 
-using namespace std;
-
-void ejecutarProcesos(proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos)
+void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos)
 {
     int numLotes, lotesPendientes, lotesTerminados, contadorGlobal;
+    int aux;
     StaticQueue pendientes, ejecucion, terminado;
-    initialize(&pendientes);
-    initialize(&ejecucion);
-    initialize(&terminado);
 
     numLotes = cantidadProcesos / 4;
     if((cantidadProcesos % 4) != 0)
@@ -22,16 +13,20 @@ void ejecutarProcesos(proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
     }
     lotesPendientes = numLotes - 1;
 
+    contadorGlobal = 0;
     for (int i = contadorGlobal; i < 4; i++) {
-        enqueue(&pendientes, arregloProcesos[i]);
+        pendientes.enqueue(arregloProcesos[i]);
+        cout << "Proceso #" << i << ": " << arregloProcesos[i].toString() << endl;
     }
 
     cout << "Numero de lotes pendientes: " << lotesPendientes << endl;
     cout << "Lote en ejecución: " << endl;    
     cout << left << setfill('-') << setw(10) << "Pendientes" << setw(10) << "En ejecucion" << setw(10) << "Resultados" << endl;
-    for()
+    aux = 4;
+    for(int i = 0; i < aux; i++)
     {
-        cout << left << setfill('-') << setw(10) << front(&pendientes).nombre << front(&pendientes).tme;
+        cout << left << setfill('-') << setw(10) << pendientes.getFront().dameNombre() << pendientes.getFront().dameTME();
+        pendientes.dequeue();
     }
     cout << "Contador Gobal: " << contadorGlobal << endl;
 

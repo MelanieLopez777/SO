@@ -1,8 +1,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <limits>
-#include "structures.h"
-#include "process.cpp"
+#include "Structure/structures.h"
+#include "Process/process.h"
 
 
 #ifdef _WIN32
@@ -16,45 +16,52 @@
 using namespace std;
 
 
-proceso usuario[TAM_PROCESOS];
+Proceso gestor[TAM_PROCESOS];
 int contadorProcesos;
 
-void mostrarMenu();
 void pedirDatos();
 bool validarID(int &id);
 
 int main(){
-    int cantidadProceso;
+    int cantidadProcesos;
     cout << "Dame la cantidad de procesos a ingresar: ";
-    cin >> cantidadProceso;
-    pedirDatos();
-    ejecutarProcesos(usuario, cantidadProceso);
+    cin >> cantidadProcesos;
+    for(int i = 0; i < cantidadProcesos; i++)
+    {   
+        pedirDatos();
+    }
+    ejecutarProcesos(gestor, cantidadProcesos);
     return 0;
 }
 
 
-void pedirDatos(int &cantidadProceso)
+void pedirDatos()
 {
-    if (contadorProcesos >= cantidadProceso) {
-        cout << " No se pueden registrar más procesos. Límite alcanzado." << endl;
-        return;
-    }
-
+    string nombre;
+    int operacion, tme, tempID;
     cin.exceptions(ios::failbit | ios::badbit);
 
+    // Nombre
     cout << "Nombre del usuario[" << (contadorProcesos+1) << "]: ";
-    cin >> usuario[contadorProcesos].nombre;
+    cin >> nombre; 
+    gestor[contadorProcesos].fijaNombre(nombre);
 
-    mostrarMenu();
-    cin >> usuario[contadorProcesos].operacion;
+    // Operador
+    cout << gestor[contadorProcesos].dameCalculadora().mostrarMenuOperaciones();
+    cin >> operacion; 
+    gestor[contadorProcesos].fijaOperacion(operacion);
 
-    // Pedir TME
+    // Valores operandos
+    gestor[contadorProcesos].dameCalculadora().pedirValores();
+
+    // TME
     while (true) {
         try {
-            cout << "Tiempo máximo estimado (TME) usuario[" << (contadorProcesos+1) << "]: ";
-            cin >> usuario[contadorProcesos].tme;
+            cout << "Tiempo máximo estimado (TME) proceso[" << (contadorProcesos+1) << "]: ";
+            cin >> tme;
+            gestor[contadorProcesos].fijaTME(tme);
 
-            if (usuario[contadorProcesos].tme <= 0) {
+            if (gestor[contadorProcesos].dameTME() <= 0) {
                 throw invalid_argument("El TME debe ser mayor a 0.");
             }
             break; 
@@ -67,18 +74,18 @@ void pedirDatos(int &cantidadProceso)
         }
     }
 
-    // Pedir ID
+    // ID
     while (true) {
         try {
-            int tempID; // 🔹 variable temporal
-            cout << "ID del proceso del usuario[" << (contadorProcesos+1) << "]: ";
+            
+            cout << "ID del proceso [" << (contadorProcesos+1) << "]: ";
             cin >> tempID;
 
             if (!validarID(tempID)) {
                 throw invalid_argument("El ID ya existe, ingresa otro.");
             }
 
-        usuario[contadorProcesos].id = tempID; // ✅ se asigna solo si es válido
+        gestor[contadorProcesos].fijaID(tempID);
         break; 
     } catch (const ios_base::failure &e) {
         cerr << "Error: no ingresaste un número válido." << endl;
@@ -98,7 +105,7 @@ bool validarID(int &id)
 {
     for (int i = 0; i < contadorProcesos; i++)  
     {
-        if (id == usuario[i].id)
+        if (id == gestor[i].dameID())
         {
             cout << "Número de identificación repetido" << endl;
             return false; 
@@ -106,23 +113,5 @@ bool validarID(int &id)
     }
     return true; 
 }
-
-
-void mostrarMenu()
-{
-    //Menú principal;
-    cout << "CALCULADORA v1.0" << endl << endl;
-    cout << "Elige una de las siguientes opciones:" << endl;
-    cout << "1. Operación: Suma"<< endl;
-    cout << "2. Operación: Resta"<< endl;
-    cout << "3. Operación: Multiplicación"<< endl;
-    cout << "4. Operación: División"<< endl;
-    cout << "5. Operación: Residuo"<< endl;
-    cout << "6. Operación: Potencia"<< endl;
-    cout << "7. Salir" << endl;
-    cout << "Ingresa el número de la operación a realizar:  ";
-
-}
-
 
 
