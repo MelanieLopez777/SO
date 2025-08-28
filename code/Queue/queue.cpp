@@ -19,47 +19,49 @@ bool StaticQueue::isFull() const {
            (front == 1 && rear == MAX_QUEUE_SIZE - 1);
 }
 
-void StaticQueue::enqueue(dataType element) {
+void StaticQueue::enqueue(dataType* element) {
     if (isFull()) {
-        std::cerr << "[!] Error: Queue is full, cannot add value" << element.toString() << "\n";
+        std::cerr << "";
         return;
     }
     rear = (rear + 1) % MAX_QUEUE_SIZE;
     data[rear] = element;
 }
 
+
 void StaticQueue::dequeue() {
     if (isEmpty()) {
-        std::cerr << "[!] Error: Queue is empty\n";
+        std::cerr << "";
         return;
     }
     front = (front + 1) % MAX_QUEUE_SIZE;
 }
 
-dataType StaticQueue::getFront() const {
+dataType* StaticQueue::getFront() const {
     if (isEmpty()) {
         throw std::runtime_error("[!] Error: Queue is empty, cannot take any element");
     }
     return data[front];
 }
 
-std::string StaticQueue::toString() const {
+
+std::string StaticQueue::toString(int etapa) const {
     std::ostringstream oss;
 
     if (isEmpty()) {
-        oss << "Queue: [ Empty ]\n";
+        oss << "";
         return oss.str();
     }
 
-    oss << "Queue: [";
+
     int current_index = front;
     bool first = true;
 
     while (true) {
         if (!first) {
-            oss << ", ";
+            oss << "\n ";
         }
-        oss << data[current_index].toString();
+        oss << data[current_index]->toString(etapa);
         first = false;
 
         if (current_index == rear) {
@@ -68,6 +70,5 @@ std::string StaticQueue::toString() const {
 
         current_index = (current_index + 1) % MAX_QUEUE_SIZE;
     }
-    oss << "]\n";
     return oss.str();
 }

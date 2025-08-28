@@ -4,17 +4,7 @@
 #include "Structure/structures.h"
 #include "Process/process.h"
 
-
-#ifdef _WIN32
-#define CLEAR "cls"
-#elif defined(unix) || defined(_unix) || defined(APPLE) || defined(MACH_)
-#define CLEAR "clear"
-#else
-#error "SO no soportado para limpiar pantalla"
-#endif
-
 using namespace std;
-
 
 Proceso gestor[TAM_PROCESOS];
 int contadorProcesos;

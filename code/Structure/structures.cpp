@@ -39,10 +39,22 @@ Calculadora& Proceso::dameCalculadora() {
 }
 
 
-std::string Proceso::toString() const {
-return "{nombre: " + nombre +
+std::string Proceso::toString(int etapa) const {
+    switch (etapa)
+    {
+    case PROCESO:
+        return "Nombre: " + nombre + "    TME: " + std::to_string(tme);
+        break;
+    case TERMINADO:
+        return "ID " + std::to_string(id) + "\nOperación: " + calculadora.operacionToString(operacion) + "\nResultado: " + std::to_string(calculadora.dameResultado()) + "\n";
+    default:
+        return "{nombre: " + nombre +
         ", id: " + std::to_string(id) +
         ", tme: " + std::to_string(tme) +
         ", operacion: " + std::to_string(operacion) +
         ", resultado: " + calculadora.operacionToString(operacion) + " = " + std::to_string(calculadora.dameResultado());
+        break;
+    }
 }
+
+// g++ main.cpp Structure\structures.cpp Calc\operations.cpp Process\process.cpp Queue\queue.cpp -o ejecutable.exe

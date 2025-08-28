@@ -7,27 +7,25 @@
 #include <stdexcept>
 #include "../Structure/structures.h"
 
+
+
 constexpr int MAX_QUEUE_SIZE = 16;
 using dataType = Proceso;
 
 class StaticQueue {
 private:
-    int front;
-    int rear;
-    dataType data[MAX_QUEUE_SIZE];
-
+    int front, rear;
+    dataType* data[MAX_QUEUE_SIZE];
 public:
     StaticQueue();
-
     void initialize();
     bool isEmpty() const;
     bool isFull() const;
-
-    void enqueue(dataType element);
+    void enqueue(dataType* element);
     void dequeue();
-    dataType getFront() const;
-
-    std::string toString() const;
+    dataType* getFront() const;
+    std::string toString(int etapa) const;
 };
+
 
 #endif // QUEUE_H
