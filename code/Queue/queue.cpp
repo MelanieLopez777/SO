@@ -47,27 +47,18 @@ dataType* StaticQueue::getFront() const {
 
 std::string StaticQueue::toString(int etapa) const {
     std::ostringstream oss;
+    int current_index = front;
 
     if (isEmpty()) {
         oss << "";
         return oss.str();
     }
 
-
-    int current_index = front;
-    bool first = true;
-
     while (true) {
-        if (!first) {
-            oss << "\n ";
-        }
         oss << data[current_index]->toString(etapa);
-        first = false;
-
         if (current_index == rear) {
             break;
         }
-
         current_index = (current_index + 1) % MAX_QUEUE_SIZE;
     }
     return oss.str();

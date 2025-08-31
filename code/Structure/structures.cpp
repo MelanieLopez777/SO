@@ -13,10 +13,6 @@ void Proceso::fijaTME(int tme) {
 }
 
 
-void Proceso::fijaOperacion(int operacion) {
-    this->operacion = operacion;
-}
-
 std::string Proceso::dameNombre() const{
     return nombre;
 }
@@ -29,11 +25,6 @@ int Proceso::dameTME() const{
     return tme;
 }
 
-
-int Proceso::dameOperacion() {
-    return operacion;
-}
-
 Calculadora& Proceso::dameCalculadora() {
     return calculadora;
 }
@@ -43,18 +34,15 @@ std::string Proceso::toString(int etapa) const {
     switch (etapa)
     {
     case PROCESO:
-        return "Nombre: " + nombre + "    TME: " + std::to_string(tme);
+        return "Nombre: " + nombre + "    TME: " + std::to_string(tme) + "\n";
         break;
     case TERMINADO:
-        return "ID " + std::to_string(id) + "\nOperación: " + calculadora.operacionToString(operacion) + "\nResultado: " + std::to_string(calculadora.dameResultado()) + "\n";
+        return "ID: " + std::to_string(id) + "\nOperación: " + calculadora.operacionToString() + "\nResultado: " + std::to_string(calculadora.dameResultado()) + "\n\n";
     default:
         return "{nombre: " + nombre +
         ", id: " + std::to_string(id) +
         ", tme: " + std::to_string(tme) +
-        ", operacion: " + std::to_string(operacion) +
-        ", resultado: " + calculadora.operacionToString(operacion) + " = " + std::to_string(calculadora.dameResultado());
+        ", resultado: " + calculadora.operacionToString() + " = " + std::to_string(calculadora.dameResultado());
         break;
     }
 }
-
-// g++ main.cpp Structure\structures.cpp Calc\operations.cpp Process\process.cpp Queue\queue.cpp -o ejecutable.exe

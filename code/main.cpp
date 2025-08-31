@@ -19,7 +19,10 @@ int main(){
     for(int i = 0; i < cantidadProcesos; i++)
     {   
         pedirDatos();
+        system(CLEAR);
     }
+
+
     ejecutarProcesos(gestor, cantidadProcesos);
     return 0;
 }
@@ -39,7 +42,7 @@ void pedirDatos()
     // Operador
     cout << gestor[contadorProcesos].dameCalculadora().mostrarMenuOperaciones();
     cin >> operacion; 
-    gestor[contadorProcesos].fijaOperacion(operacion);
+    gestor[contadorProcesos].dameCalculadora().fijaOperador(operacion);
 
     // Valores operandos
     gestor[contadorProcesos].dameCalculadora().pedirValores();
@@ -87,6 +90,7 @@ void pedirDatos()
 }
 
     cout << endl;
+    cin.get();
     contadorProcesos++;
 }
 

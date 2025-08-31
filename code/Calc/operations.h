@@ -11,16 +11,19 @@ enum Operacion { SUMA = 1, RESTA, MULTIPLICACION, DIVISION, RESIDUO, POTENCIA };
 
 class Calculadora {
 public:
-    void operar(int operador);
+    void operar();
     void pedirValores();
-    string operacionToString(int operador) const;
+    string operacionToString() const;
     string mostrarMenuOperaciones() const;
     int dameResultado() const;
+    void fijaOperador(int operador);
+    int dameOperador() const;
 
 private:
     int resultado;
     int valorA;
     int valorB;
+    int operador;
     int sumar(int num1, int num2);
     int restar(int num1, int num2);
     int multiplicar(int num1, int num2);

@@ -20,7 +20,6 @@ private:
     std::string nombre;
     int id;
     int tme;
-    int operacion;
     Calculadora calculadora;
 
 public:

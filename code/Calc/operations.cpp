@@ -2,7 +2,7 @@
 
 using namespace std;
 
-void Calculadora::operar(int operador) {
+void Calculadora::operar() {
     switch (operador) {
         case SUMA: this->resultado = sumar(this->valorA, this->valorB); break;
         case RESTA: this->resultado = restar(this->valorA, this->valorB); break;
@@ -16,7 +16,7 @@ void Calculadora::operar(int operador) {
     }
 }
 
-string Calculadora::operacionToString(int operador) const {
+string Calculadora::operacionToString() const {
     ostringstream oss;
     switch (operador) {
         case SUMA: oss << this->valorA << " + " << this->valorB; break;
@@ -73,6 +73,16 @@ void Calculadora::pedirValores() {
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
         }
     }
+}
+
+void Calculadora::fijaOperador(int operador)
+{
+    this->operador = operador;
+}
+
+int Calculadora::dameOperador() const
+{
+    return this->operador;
 }
 // --- Métodos de cálculo ---
 
