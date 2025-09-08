@@ -140,6 +140,7 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         {
             tiempoCambioContexto = residuoLoteFinal;
             for (int aux = 0; aux < residuoLoteFinal; aux++, procesoActual++) {
+                arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
                 pendientes.enqueue(&arregloProcesos[procesoActual]);
                 ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
             }
@@ -148,6 +149,7 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         {
             tiempoCambioContexto = 4;
             for (int aux = 0; aux < 4; aux++, procesoActual++) {
+                arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
                 pendientes.enqueue(&arregloProcesos[procesoActual]);
                 ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
             }
@@ -181,7 +183,10 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                 ejecucion = nullptr;
             }
         }
-        lotesPendientes--;
+        if(lotesPendientes != 0)
+        {
+            lotesPendientes--;
+        }
         lotesTerminados++;
         cout << endl;
         }

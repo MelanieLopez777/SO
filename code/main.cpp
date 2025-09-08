@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <limits>
+#include "Calc/operations.h"
 #include "Structure/structures.h"
 #include "Process/process.h"
 
@@ -32,62 +33,110 @@ void pedirDatos()
 {
     string nombre;
     int operacion, tme, tempID;
-    cin.exceptions(ios::failbit | ios::badbit);
+    float valorA, valorB;
+    Calculadora *tempCalc;
 
     // Nombre
     cout << "Nombre del usuario[" << (contadorProcesos+1) << "]: ";
     cin >> nombre; 
     gestor[contadorProcesos].fijaNombre(nombre);
 
+    tempCalc = &gestor[contadorProcesos].dameCalculadora();
     // Operador
-    cout << gestor[contadorProcesos].dameCalculadora().mostrarMenuOperaciones();
-    cin >> operacion; 
-    gestor[contadorProcesos].dameCalculadora().fijaOperador(operacion);
+    do {
+        cout << tempCalc->mostrarMenuOperaciones();
+        while (!(cin >> operacion)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada inválida. Dame un número entre 1 al 6: ";
+        }
+    } while (operacion < 1 || operacion > 6);
+    tempCalc->fijaOperador(operacion);
 
     // Valores operandos
-    gestor[contadorProcesos].dameCalculadora().pedirValores();
+
+
+    cout << "Dame el valor de a = ";
+    while (!(cin >> valorA)) {
+        cin.clear();
+        cin.ignore(numeric_limits<streamsize>::max(), '\n');
+        cout << "Entrada inválida. Dame un número para a = ";
+    }
+
+    if (tempCalc->dameOperador() == RESIDUO || tempCalc->dameOperador() == DIVISION) {
+        do {
+            cout << "El 0 no es numero valido. Dame el valor de b = ";
+            while (!(cin >> valorB)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Entrada inválida. Dame un número para b = ";
+            }
+        } while (valorB == 0);
+    }
+    else if (tempCalc->dameOperador() == POTENCIA) {
+        do {
+            cout << "Dame el valor de b (debe ser positivo) = ";
+            while (!(cin >> valorB)) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Entrada inválida. Dame un número para b = ";
+            }
+        } while (valorB < 0);
+    }
+    else {
+        cout << "Dame el valor de b = ";
+        while (!(cin >> valorB)) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Entrada inválida. Dame un número para b = ";
+        }
+    }
+    tempCalc->fijaValorA(valorA);
+    tempCalc->fijaValorB(valorB);
 
     // TME
     while (true) {
-        try {
-            cout << "Tiempo máximo estimado (TME) proceso[" << (contadorProcesos+1) << "]: ";
-            cin >> tme;
-            gestor[contadorProcesos].fijaTME(tme);
+        cout << "Tiempo máximo estimado (TME) proceso[" << (contadorProcesos+1) << "]: ";
+        cin >> tme;
 
-            if (gestor[contadorProcesos].dameTME() <= 0) {
-                throw invalid_argument("El TME debe ser mayor a 0.");
-            }
-            break; 
-        } catch (const ios_base::failure &e) {
+        if (cin.fail()) {
             cerr << "Error: no ingresaste un número válido." << endl;
             cin.clear();
             cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        } catch (const invalid_argument &e) {
-            cerr << "Error: " << e.what() << endl;
+            continue; // vuelve a pedir
         }
+
+        gestor[contadorProcesos].fijaTME(tme);
+
+        if (gestor[contadorProcesos].dameTME() <= 0) {
+            cerr << "Error: El TME debe ser mayor a 0." << endl;
+            continue;
+        }
+
+        break; // si pasa las validaciones, sale del while
     }
 
     // ID
     while (true) {
-        try {
-            
-            cout << "ID del proceso [" << (contadorProcesos+1) << "]: ";
-            cin >> tempID;
+        cout << "ID del proceso [" << (contadorProcesos+1) << "]: ";
+        cin >> tempID;
 
-            if (!validarID(tempID)) {
-                throw invalid_argument("El ID ya existe, ingresa otro.");
-            }
+        if (cin.fail()) {
+            cerr << "Error: no ingresaste un número válido." << endl;
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            continue;
+        }
+
+        if (!validarID(tempID)) {
+            cerr << "Error: El ID ya existe, ingresa otro." << endl;
+            continue;
+        }
 
         gestor[contadorProcesos].fijaID(tempID);
-        break; 
-    } catch (const ios_base::failure &e) {
-        cerr << "Error: no ingresaste un número válido." << endl;
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    } catch (const invalid_argument &e) {
-        cerr << "Error: " << e.what() << endl;
+        break; // todo bien, salimos
     }
-}
+
 
     cout << endl;
     cin.get();

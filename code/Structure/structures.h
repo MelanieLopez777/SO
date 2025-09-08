@@ -21,16 +21,17 @@ private:
     int id;
     int tme;
     Calculadora calculadora;
+    int numeroLote;
 
 public:
     void fijaNombre(string nombre);
     void fijaID(int id);
     void fijaTME(int tme);
-    void fijaOperacion(int operacion);
+    void fijaNumeroLote(int numeroLote);
     std::string dameNombre() const;
     int dameID() const;
     int dameTME() const;
-    int dameOperacion();
+    int dameNumeroLote() const;
     Calculadora& dameCalculadora();
     std::string toString(int etapa) const;
 };

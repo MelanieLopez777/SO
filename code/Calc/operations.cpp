@@ -45,34 +45,8 @@ string Calculadora::mostrarMenuOperaciones() const {
     return oss.str();
 }
 
-int Calculadora::dameResultado() const{
+float Calculadora::dameResultado() const{
     return resultado;
-}
-
-void Calculadora::pedirValores() {
-    while (true) {
-        try {
-            cout << "Dame el valor de a= ";
-            cin >> this->valorA;
-            break;
-        } catch (const ios_base::failure &) {
-            cerr << "Error: debes ingresar un número entero válido." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-    }
-
-    while (true) {
-        try {
-            cout << "Dame el valor de b= ";
-            cin >> this->valorB;
-            break;
-        } catch (const ios_base::failure &) {
-            cerr << "Error: debes ingresar un número entero válido." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-    }
 }
 
 void Calculadora::fijaOperador(int operador)
@@ -80,31 +54,49 @@ void Calculadora::fijaOperador(int operador)
     this->operador = operador;
 }
 
+void Calculadora::fijaValorA(float valorA)
+{
+    this->valorA = valorA;
+}
+
+void Calculadora::fijaValorB(float valorB)
+{
+    this->valorB = valorB;
+}
+
 int Calculadora::dameOperador() const
 {
     return this->operador;
 }
+
+float Calculadora::dameValorA() const
+{
+    return this->valorA;
+}
+
+float Calculadora::dameValorB () const
+{
+    return this->valorB;
+}
 // --- Métodos de cálculo ---
 
-int Calculadora::sumar(int num1, int num2) { return num1 + num2; }
+float Calculadora::sumar(float num1, float num2) { return num1 + num2; }
 
-int Calculadora::restar(int num1, int num2) { return num1 - num2; }
+float Calculadora::restar(float num1, float num2) { return num1 - num2; }
 
-int Calculadora::multiplicar(int num1, int num2) { return num1 * num2; }
+float Calculadora::multiplicar(float num1, float num2) { return num1 * num2; }
 
-int Calculadora::dividir(int num1, int num2) {
-    if (num2 == 0) {
-        throw invalid_argument("Error: división entre cero.");
-    }
+float Calculadora::dividir(float num1, float num2) 
+{
     return num1 / num2;
 }
 
-int Calculadora::residuo(int num1, int num2) { return num1 % num2; }
+float Calculadora::residuo(float num1, float num2) 
+{ 
+    float r = fmod(num1, num2);
+    return (r < 0) ? r + fabs(num2) : r;
+}
 
-int Calculadora::potencia(int num1, int n) {
-    int resultado = 1;
-    for (int i = 0; i < n; i++) {
-        resultado *= num1;
-    }
-    return resultado;
+float Calculadora::potencia(float num1, float n) {
+    return pow(num1, n);
 }

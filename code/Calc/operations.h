@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <string>
 #include <sstream>
+#include <cmath>
 
 using namespace std;
 
@@ -12,22 +13,25 @@ enum Operacion { SUMA = 1, RESTA, MULTIPLICACION, DIVISION, RESIDUO, POTENCIA };
 class Calculadora {
 public:
     void operar();
-    void pedirValores();
     string operacionToString() const;
     string mostrarMenuOperaciones() const;
-    int dameResultado() const;
+    float dameResultado() const;
     void fijaOperador(int operador);
+    void fijaValorA(float valorA);
+    void fijaValorB(float valorB);
     int dameOperador() const;
+    float dameValorA() const;
+    float dameValorB() const;
 
 private:
-    int resultado;
-    int valorA;
-    int valorB;
+    float resultado;
+    float valorA;
+    float valorB;
     int operador;
-    int sumar(int num1, int num2);
-    int restar(int num1, int num2);
-    int multiplicar(int num1, int num2);
-    int dividir(int num1, int num2);
-    int residuo(int num1, int num2);
-    int potencia(int num1, int n);
+    float sumar(float num1, float num2);
+    float restar(float num1, float num2);
+    float multiplicar(float num1, float num2);
+    float dividir(float num1, float num2);
+    float residuo(float num1, float num2);
+    float potencia(float num1, float n);
 };
