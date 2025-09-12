@@ -17,20 +17,20 @@ enum etapasEnum {PROCESO, TERMINADO};
 class Proceso {
 
 private:
-    std::string nombre;
     int id;
     int tme;
+    int tiempoTotal;
     Calculadora calculadora;
     int numeroLote;
 
 public:
-    void fijaNombre(string nombre);
     void fijaID(int id);
     void fijaTME(int tme);
+    void fijaTT(int tiempoTotal);
     void fijaNumeroLote(int numeroLote);
-    std::string dameNombre() const;
     int dameID() const;
     int dameTME() const;
+    int dameTT() const;
     int dameNumeroLote() const;
     Calculadora& dameCalculadora();
     std::string toString(int etapa) const;

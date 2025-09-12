@@ -16,6 +16,7 @@ public:
     string operacionToString() const;
     string mostrarMenuOperaciones() const;
     float dameResultado() const;
+    void fijaResultado(float resultado);
     void fijaOperador(int operador);
     void fijaValorA(float valorA);
     void fijaValorB(float valorB);

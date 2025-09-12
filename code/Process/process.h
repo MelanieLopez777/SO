@@ -1,10 +1,10 @@
 #pragma once
 #include <limits>
-#include <iostream>
 #include <iomanip>
 #include <vector>
 #include <sstream>
 #include <iostream>
+#include <conio.h> 
 #include <thread>
 #include <chrono>
 #include <algorithm>

@@ -54,6 +54,11 @@ void Calculadora::fijaOperador(int operador)
     this->operador = operador;
 }
 
+void Calculadora::fijaResultado(float resultado)
+{
+    this->resultado = resultado;
+}
+
 void Calculadora::fijaValorA(float valorA)
 {
     this->valorA = valorA;

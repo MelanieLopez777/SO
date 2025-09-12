@@ -1,7 +1,4 @@
 #include "process.h"
-#include <cstdlib>
-#include <iostream>
-
 
 using namespace std;
 
@@ -27,6 +24,7 @@ void printTableRow(const string &pendienteStr, const string &ejecucionStr, const
         string ejecLine = i < ejecucion.size() ? ejecucion[i] : "";
         string resLine = i < resultados.size() ? resultados[i] : "";
 
+        cout << fixed << setprecision(2);
         cout << "|"
              << left << setw(colWidth) << pendLine << "|"
              << left << setw(colWidth) << ejecLine << "|"
@@ -46,7 +44,7 @@ void actualizarInformacion(
 {
     pendientesString = pendientes.toString(PROCESO);
             ejecucionString = (ejecucion == nullptr) ? "" 
-                : ejecucion->dameNombre() + "\nOperacion: " + ejecucion->dameCalculadora().operacionToString() + "\nID: " + to_string(ejecucion->dameID()) + "\nTME: " + to_string(ejecucion->dameTME()) + "\nTE: " + to_string(tiempoEjecucion) + "\nTR: " + to_string(tiempoRestante);
+                : "ID: " + to_string(ejecucion->dameID()) +"\nOperacion: " + ejecucion->dameCalculadora().operacionToString() +  "\nTME: " + to_string(ejecucion->dameTME()) + "\nTT: " + to_string(ejecucion->dameTT()) + "\nTR: " + to_string(tiempoRestante);
             if(ejecucion != nullptr)
             {
                 ejecucion->dameCalculadora().operar();
@@ -70,6 +68,8 @@ void imprimirTablaResultados(
     int colWidth)
 {
     actualizarInformacion(pendienteStr, ejecucionStr, resultadoStr, pendientes, ejecucion, terminado, tiempoEjecucion, tiempoRestante);
+
+    cout << fixed << setprecision(2);
     
     // Encabezado
     cout << "Numero de lotes pendientes: " << lotesPendientes << endl;
@@ -119,34 +119,29 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
     const int colWidth = 30; 
     string pendientesString, ejecucionString, resultadoString;
     StaticQueue pendientes, terminado;
-    Proceso *ejecucion;
-    
+    Proceso *ejecucion = nullptr;
+    bool pausa = false; // para P y C
+
     numLotes = cantidadProcesos / 4;
-    if(residuoLoteFinal != 0)
-    {
-        numLotes++;
-    }
+    if(residuoLoteFinal != 0) numLotes++;
+    
     lotesPendientes  = numLotes - 1;
     loteEnEjecucion = numLotes - lotesPendientes;
     
     for(i = 0, procesoActual = 0; i < numLotes; i++)
     {
-        cout << "i = " << i << endl;
-        cout << "Procesos = " << cantidadProcesos << endl;
         loteEnEjecucion = numLotes - lotesPendientes;
         ejecucionLoteCompleto = 0;
-        // Agregar procesos a la cola de pendientes
-        if(loteEnEjecucion == numLotes && residuoLoteFinal != 0)
-        {
+
+        // Agregar procesos al lote actual
+        if(loteEnEjecucion == numLotes && residuoLoteFinal != 0) {
             tiempoCambioContexto = residuoLoteFinal;
             for (int aux = 0; aux < residuoLoteFinal; aux++, procesoActual++) {
                 arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
                 pendientes.enqueue(&arregloProcesos[procesoActual]);
                 ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
             }
-        }
-        else {
-        {
+        } else {
             tiempoCambioContexto = 4;
             for (int aux = 0; aux < 4; aux++, procesoActual++) {
                 arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
@@ -154,44 +149,94 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                 ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
             }
         }
-        }  
-        for(j = 0, ejecucion = nullptr, tiempoEjecucion = 0, tiempoRestante = 0; j < ejecucionLoteCompleto + tiempoCambioContexto; j++) 
-        {
-            // Calculos        
-            tiempoEjecucion++;
-            tiempoRestante = (ejecucion != nullptr) ? (ejecucion->dameTME() - tiempoEjecucion) : 0;
-            
-            // Imprimir Tabla
-            imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados, contadorGlobal, pendientesString, ejecucionString, resultadoString, pendientes, ejecucion, terminado, tiempoEjecucion, tiempoRestante, colWidth);
 
-            // Actualización
+        // EJECUCIÓN DEL LOTE
+        for(j = 0, ejecucion = nullptr, tiempoEjecucion = 0, tiempoRestante = 0;
+            j < ejecucionLoteCompleto + tiempoCambioContexto; j++) 
+        {
+            // Captura de teclas
+            if(_kbhit()) {
+                char tecla = toupper(_getch());
+                switch(tecla) {
+                    case 'E': // Interrupción E/S
+                        if(ejecucion != nullptr) {
+                            ejecucion->fijaTT(ejecucion->dameTME() - tiempoEjecucion);
+                            pendientes.enqueue(ejecucion);
+                            ejecucion = nullptr;
+                        }
+                        break;
+                    case 'W': // Error
+                        if(ejecucion != nullptr) {
+                            ejecucion->dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
+                            terminado.enqueue(ejecucion);
+                            ejecucion = nullptr;
+                        }
+                        break;
+                    case 'P': // Pausa
+                        pausa = true;
+                         imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
+                                    contadorGlobal, pendientesString, ejecucionString,
+                                    resultadoString, pendientes, ejecucion,
+                                    terminado, tiempoEjecucion, tiempoRestante, colWidth);
+                        break;
+                    case 'C': // Continuar
+                        pausa = false;
+                        break;
+                }
+            }
+
+            // Manejo de pausa
+            while(pausa) {
+                // Durante la pausa NO se borra la pantalla
+                // La impresión actual queda fija
+                if(_kbhit()) {
+                    char t = toupper(_getch());
+                    if(t == 'C') pausa = false; // Se reanuda
+                }
+                this_thread::sleep_for(chrono::milliseconds(100));
+            }
+
+            // Calculos
+            if(ejecucion != nullptr) {
+                tiempoEjecucion++;
+                tiempoRestante = ejecucion->dameTT() - tiempoEjecucion;
+                
+            }
+
+            // Imprimir tabla
+            imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
+                                    contadorGlobal, pendientesString, ejecucionString,
+                                    resultadoString, pendientes, ejecucion,
+                                    terminado, tiempoEjecucion, tiempoRestante, colWidth);
+
             this_thread::sleep_for(chrono::seconds(1));
-            system(CLEAR);
-            
+            system(CLEAR);  
+
             if(ejecucion != nullptr)
                 contadorGlobal++;
-        
-            // Actualizar ejecución y pendientes
+
+            // Actualizar ejecución
             if (ejecucion == nullptr && !pendientes.isEmpty()) {
-                // Cargar un nuevo proceso si no hay ejecución
                 ejecucion = pendientes.getFront();
                 pendientes.dequeue();
                 tiempoEjecucion = 0;
             } else if (ejecucion != nullptr && tiempoRestante == 0) {
-                // Proceso terminó, pasa a terminados
                 terminado.enqueue(ejecucion);
                 ejecucion = nullptr;
             }
         }
-        if(lotesPendientes != 0)
-        {
-            lotesPendientes--;
-        }
+
+        if(lotesPendientes != 0) lotesPendientes--;
         lotesTerminados++;
-        cout << endl;
-        }
-    imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados, contadorGlobal, pendientesString, ejecucionString, resultadoString, pendientes, ejecucion, terminado, tiempoEjecucion, tiempoRestante, colWidth);
+    }
+
+    imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
+                            contadorGlobal, pendientesString, ejecucionString,
+                            resultadoString, pendientes, ejecucion, terminado,
+                            tiempoEjecucion, tiempoRestante, colWidth);
+
     cout << "Presiona Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
     system(CLEAR);
 }
+

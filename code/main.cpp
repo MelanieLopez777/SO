@@ -1,17 +1,27 @@
 #include <iostream>
 #include <stdexcept>
 #include <limits>
+#include <cstdlib> 
+#include <ctime>  
 #include "Calc/operations.h"
 #include "Structure/structures.h"
 #include "Process/process.h"
 
 using namespace std;
 
+#define MIN_ID 1
+#define MAX_ID 1000
+#define MIN_TME 6
+#define MAX_TME 20
+#define RANGO_OPERANDO_MAX 10000
+#define RANGO_OPERANDO_MIN 0
+
 Proceso gestor[TAM_PROCESOS];
 int contadorProcesos;
 
-void pedirDatos();
+void generarDatos();
 bool validarID(int &id);
+void bubbleSort(int cantidadProcesos);
 
 int main(){
     int cantidadProcesos;
@@ -19,130 +29,54 @@ int main(){
     cin >> cantidadProcesos;
     for(int i = 0; i < cantidadProcesos; i++)
     {   
-        pedirDatos();
+        generarDatos();
         system(CLEAR);
     }
 
-
+    bubbleSort(cantidadProcesos);
     ejecutarProcesos(gestor, cantidadProcesos);
     return 0;
 }
 
 
-void pedirDatos()
+void generarDatos()
 {
-    string nombre;
-    int operacion, tme, tempID;
-    float valorA, valorB;
-    Calculadora *tempCalc;
+    int numeroAleatorio, operandoA, operandoB, operacion;
 
-    // Nombre
-    cout << "Nombre del usuario[" << (contadorProcesos+1) << "]: ";
-    cin >> nombre; 
-    gestor[contadorProcesos].fijaNombre(nombre);
+    srand(time(0));
 
-    tempCalc = &gestor[contadorProcesos].dameCalculadora();
-    // Operador
-    do {
-        cout << tempCalc->mostrarMenuOperaciones();
-        while (!(cin >> operacion)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Entrada inválida. Dame un número entre 1 al 6: ";
-        }
-    } while (operacion < 1 || operacion > 6);
-    tempCalc->fijaOperador(operacion);
+    //Generación de ID aleatorio//
+    do{
+        numeroAleatorio = MIN_ID + (rand() % (MAX_ID - MIN_ID + 1));
 
-    // Valores operandos
+    }while(!validarID(numeroAleatorio)); 
+    gestor[contadorProcesos].fijaID(numeroAleatorio);
 
+    //Generación de TME aleatorio//
 
-    cout << "Dame el valor de a = ";
-    while (!(cin >> valorA)) {
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        cout << "Entrada inválida. Dame un número para a = ";
-    }
+    numeroAleatorio = MIN_TME + (rand() % (MAX_TME - MIN_TME + 1));
+    gestor[contadorProcesos].fijaTME(numeroAleatorio);
+    gestor[contadorProcesos].fijaTT(numeroAleatorio);
 
-    if (tempCalc->dameOperador() == RESIDUO || tempCalc->dameOperador() == DIVISION) {
-        do {
-            cout << "El 0 no es numero valido. Dame el valor de b = ";
-            while (!(cin >> valorB)) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Entrada inválida. Dame un número para b = ";
-            }
-        } while (valorB == 0);
-    }
-    else if (tempCalc->dameOperador() == POTENCIA) {
-        do {
-            cout << "Dame el valor de b (debe ser positivo) = ";
-            while (!(cin >> valorB)) {
-                cin.clear();
-                cin.ignore(numeric_limits<streamsize>::max(), '\n');
-                cout << "Entrada inválida. Dame un número para b = ";
-            }
-        } while (valorB < 0);
-    }
-    else {
-        cout << "Dame el valor de b = ";
-        while (!(cin >> valorB)) {
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            cout << "Entrada inválida. Dame un número para b = ";
-        }
-    }
-    tempCalc->fijaValorA(valorA);
-    tempCalc->fijaValorB(valorB);
+    //Generación de operación aleatoria//
+    numeroAleatorio = 1 + (rand() % (6));
+    gestor[contadorProcesos].dameCalculadora().fijaOperador(numeroAleatorio);
 
-    // TME
-    while (true) {
-        cout << "Tiempo máximo estimado (TME) proceso[" << (contadorProcesos+1) << "]: ";
-        cin >> tme;
+    //Generación de operandos para operaciones
+    operandoA = RANGO_OPERANDO_MAX + (rand() % (RANGO_OPERANDO_MAX - RANGO_OPERANDO_MIN));
+    operacion = gestor[contadorProcesos].dameCalculadora().dameOperador();
 
-        if (cin.fail()) {
-            cerr << "Error: no ingresaste un número válido." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue; // vuelve a pedir
-        }
+    do
+    {
+      operandoB = RANGO_OPERANDO_MAX + (rand() % (RANGO_OPERANDO_MAX - RANGO_OPERANDO_MIN + 1));
+    } while((operacion == DIVISION || operacion == RESIDUO) && operandoB == 0);
 
-        gestor[contadorProcesos].fijaTME(tme);
-
-        if (gestor[contadorProcesos].dameTME() <= 0) {
-            cerr << "Error: El TME debe ser mayor a 0." << endl;
-            continue;
-        }
-
-        break; // si pasa las validaciones, sale del while
-    }
-
-    // ID
-    while (true) {
-        cout << "ID del proceso [" << (contadorProcesos+1) << "]: ";
-        cin >> tempID;
-
-        if (cin.fail()) {
-            cerr << "Error: no ingresaste un número válido." << endl;
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-            continue;
-        }
-
-        if (!validarID(tempID)) {
-            cerr << "Error: El ID ya existe, ingresa otro." << endl;
-            continue;
-        }
-
-        gestor[contadorProcesos].fijaID(tempID);
-        break; // todo bien, salimos
-    }
+    gestor[contadorProcesos].dameCalculadora().fijaValorA(operandoA);
+    gestor[contadorProcesos].dameCalculadora().fijaValorB(operandoB);
 
 
-    cout << endl;
-    cin.get();
     contadorProcesos++;
 }
-
 
 bool validarID(int &id)
 {
@@ -157,4 +91,23 @@ bool validarID(int &id)
     return true; 
 }
 
+// Función para realizar el Bubble Sort
+void bubbleSort(int cantidadProcesos) {
 
+    bool swapped; 
+    for (int i = 0; i < cantidadProcesos- 1; ++i) {
+        swapped = false;
+
+        for (int j = 0; j < cantidadProcesos - 1 - i; ++j) {
+            if (gestor[j].dameID() > gestor[j + 1].dameID()) {
+
+                swap(gestor[j], gestor[j + 1]);
+                swapped = true;
+            }
+        }
+
+        if (!swapped) {
+            break;
+        }
+    }
+}
