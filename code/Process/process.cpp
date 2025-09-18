@@ -38,13 +38,11 @@ void actualizarInformacion(
     string &resultadoString, 
     StaticQueue &pendientes, 
     Proceso *ejecucion, 
-    StaticQueue &terminado, 
-    int tiempoEjecucion, 
-    int tiempoRestante)
+    StaticQueue &terminado)
 {
     pendientesString = pendientes.toString(PROCESO);
             ejecucionString = (ejecucion == nullptr) ? "" 
-                : "ID: " + to_string(ejecucion->dameID()) +"\nOperacion: " + ejecucion->dameCalculadora().operacionToString() +  "\nTME: " + to_string(ejecucion->dameTME()) + "\nTT: " + to_string(ejecucion->dameTT()) + "\nTR: " + to_string(tiempoRestante);
+                : "ID: " + to_string(ejecucion->dameID()) +"\nOperacion: " + ejecucion->dameCalculadora().operacionToString() +  "\nTME: " + to_string(ejecucion->dameReloj().getEstimatedTimeAmount()) + "\nT.Trans: " + to_string(ejecucion->dameReloj().getElapsedTime()) + "\nTR: " + to_string(ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime());
             if(ejecucion != nullptr)
             {
                 ejecucion->dameCalculadora().operar();
@@ -63,11 +61,9 @@ void imprimirTablaResultados(
     StaticQueue &pendientes,
     Proceso *ejecucion,
     StaticQueue &terminado,
-    int tiempoEjecucion,
-    int tiempoRestante,
     int colWidth)
 {
-    actualizarInformacion(pendienteStr, ejecucionStr, resultadoStr, pendientes, ejecucion, terminado, tiempoEjecucion, tiempoRestante);
+    actualizarInformacion(pendienteStr, ejecucionStr, resultadoStr, pendientes, ejecucion, terminado);
 
     cout << fixed << setprecision(2);
     
@@ -113,14 +109,14 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
     int contadorGlobal = 0;
     int residuoLoteFinal = cantidadProcesos % 4;
     int tiempoCambioContexto;
+    int tiempoTranscurrido;
     int i, j, procesoActual;
-    int tiempoEjecucion, tiempoRestante;
     int ejecucionLoteCompleto;
     const int colWidth = 30; 
     string pendientesString, ejecucionString, resultadoString;
     StaticQueue pendientes, terminado;
     Proceso *ejecucion = nullptr;
-    bool pausa = false; // para P y C
+    bool pausa = false;
 
     numLotes = cantidadProcesos / 4;
     if(residuoLoteFinal != 0) numLotes++;
@@ -133,25 +129,27 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         loteEnEjecucion = numLotes - lotesPendientes;
         ejecucionLoteCompleto = 0;
 
-        // Agregar procesos al lote actual
+        // INICIALIZACION DE LOTE
         if(loteEnEjecucion == numLotes && residuoLoteFinal != 0) {
             tiempoCambioContexto = residuoLoteFinal;
+            // LOTES CON MENOS DE 4 PROCESOS
             for (int aux = 0; aux < residuoLoteFinal; aux++, procesoActual++) {
                 arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
                 pendientes.enqueue(&arregloProcesos[procesoActual]);
-                ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
+                ejecucionLoteCompleto += arregloProcesos[procesoActual].dameReloj().getEstimatedTimeAmount();
             }
         } else {
+            // LOTES COMPLETOS
             tiempoCambioContexto = 4;
             for (int aux = 0; aux < 4; aux++, procesoActual++) {
                 arregloProcesos[procesoActual].fijaNumeroLote(loteEnEjecucion);
                 pendientes.enqueue(&arregloProcesos[procesoActual]);
-                ejecucionLoteCompleto += arregloProcesos[procesoActual].dameTME();
+                ejecucionLoteCompleto += arregloProcesos[procesoActual].dameReloj().getEstimatedTimeAmount();
             }
         }
 
         // EJECUCIÓN DEL LOTE
-        for(j = 0, ejecucion = nullptr, tiempoEjecucion = 0, tiempoRestante = 0;
+        for(j = 0, ejecucion = nullptr;
             j < ejecucionLoteCompleto + tiempoCambioContexto; j++) 
         {
             // Captura de teclas
@@ -160,7 +158,6 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                 switch(tecla) {
                     case 'E': // Interrupción E/S
                         if(ejecucion != nullptr) {
-                            ejecucion->fijaTT(ejecucion->dameTME() - tiempoEjecucion);
                             pendientes.enqueue(ejecucion);
                             ejecucion = nullptr;
                         }
@@ -169,6 +166,7 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                         if(ejecucion != nullptr) {
                             ejecucion->dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
                             terminado.enqueue(ejecucion);
+                            j += ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime();
                             ejecucion = nullptr;
                         }
                         break;
@@ -177,40 +175,35 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                          imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
                                     contadorGlobal, pendientesString, ejecucionString,
                                     resultadoString, pendientes, ejecucion,
-                                    terminado, tiempoEjecucion, tiempoRestante, colWidth);
+                                    terminado, colWidth);
                         break;
                     case 'C': // Continuar
                         pausa = false;
                         break;
                 }
             }
-
             // Manejo de pausa
             while(pausa) {
-                // Durante la pausa NO se borra la pantalla
-                // La impresión actual queda fija
                 if(_kbhit()) {
                     char t = toupper(_getch());
-                    if(t == 'C') pausa = false; // Se reanuda
+                    if(t == 'C') pausa = false;
                 }
                 this_thread::sleep_for(chrono::milliseconds(100));
             }
 
             // Calculos
             if(ejecucion != nullptr) {
-                tiempoEjecucion++;
-                tiempoRestante = ejecucion->dameTT() - tiempoEjecucion;
-                
+                ejecucion->dameReloj().setElapsedTime(tiempoTranscurrido++);
             }
 
             // Imprimir tabla
             imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
                                     contadorGlobal, pendientesString, ejecucionString,
                                     resultadoString, pendientes, ejecucion,
-                                    terminado, tiempoEjecucion, tiempoRestante, colWidth);
+                                    terminado, colWidth);
 
             this_thread::sleep_for(chrono::seconds(1));
-            system(CLEAR);  
+            //system(CLEAR);  
 
             if(ejecucion != nullptr)
                 contadorGlobal++;
@@ -219,8 +212,8 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
             if (ejecucion == nullptr && !pendientes.isEmpty()) {
                 ejecucion = pendientes.getFront();
                 pendientes.dequeue();
-                tiempoEjecucion = 0;
-            } else if (ejecucion != nullptr && tiempoRestante == 0) {
+                tiempoTranscurrido = 0;
+            } else if (ejecucion != nullptr && (ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime()) == 0) {
                 terminado.enqueue(ejecucion);
                 ejecucion = nullptr;
             }
@@ -232,11 +225,10 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
 
     imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
                             contadorGlobal, pendientesString, ejecucionString,
-                            resultadoString, pendientes, ejecucion, terminado,
-                            tiempoEjecucion, tiempoRestante, colWidth);
+                            resultadoString, pendientes, ejecucion, terminado, 
+                            colWidth);
 
     cout << "Presiona Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    system(CLEAR);
 }
 

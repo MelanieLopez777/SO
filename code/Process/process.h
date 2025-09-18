@@ -25,9 +25,7 @@ void imprimirTablaResultados(
     string &resultadoStr, 
     StaticQueue &pendientes, 
     Proceso *ejecucion, 
-    StaticQueue &terminado, 
-    int tiempoEjecucion, 
-    int tiempoRestante, 
+    StaticQueue &terminado,  
     int colWidth);
 void actualizarInformacion(
     string &pendientesString, 
@@ -35,7 +33,5 @@ void actualizarInformacion(
     string &resultadoString, 
     StaticQueue &pendientes, 
     Proceso *ejecucion, 
-    StaticQueue &terminado, 
-    int tiempoEjecucion, 
-    int tiempoRestante);
+    StaticQueue &terminado);
 void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos);

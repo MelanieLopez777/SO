@@ -1,6 +1,7 @@
 #pragma once
 #include <string>
 #include "../Calc/operations.h"
+#include "../Clock/clock.h"
 
 #ifdef _WIN32
 #define CLEAR "cls"
@@ -18,20 +19,16 @@ class Proceso {
 
 private:
     int id;
-    int tme;
-    int tiempoTotal;
     Calculadora calculadora;
+    Clock reloj;
     int numeroLote;
 
 public:
     void fijaID(int id);
-    void fijaTME(int tme);
-    void fijaTT(int tiempoTotal);
     void fijaNumeroLote(int numeroLote);
     int dameID() const;
-    int dameTME() const;
-    int dameTT() const;
     int dameNumeroLote() const;
     Calculadora& dameCalculadora();
+    Clock& dameReloj();
     std::string toString(int etapa) const;
 };
