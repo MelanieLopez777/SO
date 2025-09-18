@@ -149,9 +149,11 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         }
 
         // EJECUCIÓN DEL LOTE
-        for(j = 0, ejecucion = nullptr;
-            j < ejecucionLoteCompleto + tiempoCambioContexto; j++) 
+        while(!pendientes.isEmpty() || ejecucion != nullptr) 
         {
+            cout<<"Ejecución lote completo: "<< ejecucionLoteCompleto << endl;
+            cout<<"Limite: "<< ejecucionLoteCompleto + tiempoCambioContexto << endl;
+
             // Captura de teclas
             if(_kbhit()) {
                 char tecla = toupper(_getch());
@@ -166,7 +168,7 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                         if(ejecucion != nullptr) {
                             ejecucion->dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
                             terminado.enqueue(ejecucion);
-                            j += ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime();
+                            ejecucionLoteCompleto -= ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime();
                             ejecucion = nullptr;
                         }
                         break;
@@ -197,26 +199,27 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
             }
 
             // Imprimir tabla
+            
+            if(ejecucion != nullptr)
+            contadorGlobal++;
+            
+            // Actualizar ejecución
+            if (ejecucion == nullptr && !pendientes.isEmpty()) {
+                ejecucion = pendientes.getFront();
+                pendientes.dequeue();
+                tiempoTranscurrido = ejecucion->dameReloj().getElapsedTime();
+            } else if (ejecucion != nullptr && (ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime()) == 0) {
+                terminado.enqueue(ejecucion);
+                ejecucion = nullptr;
+            }
+            
             imprimirTablaResultados(lotesPendientes, loteEnEjecucion, lotesTerminados,
                                     contadorGlobal, pendientesString, ejecucionString,
                                     resultadoString, pendientes, ejecucion,
                                     terminado, colWidth);
 
             this_thread::sleep_for(chrono::seconds(1));
-            //system(CLEAR);  
-
-            if(ejecucion != nullptr)
-                contadorGlobal++;
-
-            // Actualizar ejecución
-            if (ejecucion == nullptr && !pendientes.isEmpty()) {
-                ejecucion = pendientes.getFront();
-                pendientes.dequeue();
-                tiempoTranscurrido = 0;
-            } else if (ejecucion != nullptr && (ejecucion->dameReloj().getEstimatedTimeAmount() - ejecucion->dameReloj().getElapsedTime()) == 0) {
-                terminado.enqueue(ejecucion);
-                ejecucion = nullptr;
-            }
+            system(CLEAR);  
         }
 
         if(lotesPendientes != 0) lotesPendientes--;

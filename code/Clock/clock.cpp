@@ -60,7 +60,7 @@ int Clock::getElapsedTime() const
 }
 int Clock::getEstimatedTimeAmount() const
 {
-    return elapsedTime;
+    return estimatedTimeAmount;
 }
 
 
