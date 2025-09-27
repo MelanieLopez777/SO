@@ -13,22 +13,35 @@
 
 #define TAM_PROCESOS 16
 
-enum etapasEnum {PROCESO, TERMINADO};
+//Definición de los cinco estados del proceso
+enum class estadoProceso {
+    NUEVO,
+    LISTO,
+    EJECUCION,
+    BLOQUEADO,
+    TERMINADO
+};
 
 class Proceso {
 
 private:
-    int id;
     Calculadora calculadora;
     Clock reloj;
+    estadoProceso estado;
     int numeroLote;
+    int id;
 
 public:
+
+    Proceso() : estado(estadoProceso::NUEVO), numeroLote(0), id(-1) {}
+
     void fijaID(int id);
     void fijaNumeroLote(int numeroLote);
+    void fijaEstado (estadoProceso nuevoEstado);
     int dameID() const;
     int dameNumeroLote() const;
     Calculadora& dameCalculadora();
     Clock& dameReloj();
-    std::string toString(int etapa) const;
+    estadoProceso dameEstado() const;
+    std::string toString(estadoProceso etapa) const;
 };

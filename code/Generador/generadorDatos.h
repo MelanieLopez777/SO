@@ -10,7 +10,7 @@
 #define MAX_ID 1000
 #define MIN_TME 6
 #define MAX_TME 12 
-#define RANGO_OPERANDO_MAX 10000
+#define RANGO_OPERANDO_MAX 100
 #define RANGO_OPERANDO_MIN 0
 
 // 🔹 Declaraciones (no definen memoria aquí)

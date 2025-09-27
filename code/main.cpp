@@ -9,7 +9,7 @@ using namespace std;
 
 int main(){
     int cantidadProcesos;
-    cout << "Dame la cantidad de procesos a ingresar: ";
+    cout << "Dame la cantidad de procesos inicial: ";
     cin >> cantidadProcesos;
     for(int i = 0; i < cantidadProcesos; i++)
     {   

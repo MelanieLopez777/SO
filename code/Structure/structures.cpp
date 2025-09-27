@@ -1,63 +1,77 @@
 #include "structures.h"
 #include <string>
 #include <iomanip>
+#include <sstream>
+#include <limits>
 
-void Proceso::fijaID(int id) 
-{
-        this->id = id;
+void Proceso::fijaID(int id) {
+    this->id = id;
 }
 
-void Proceso::fijaNumeroLote(int numeroLote)
-{
+void Proceso::fijaNumeroLote(int numeroLote) {
     this->numeroLote = numeroLote;
 }
 
-int Proceso::dameID() const
-{
+
+void Proceso::fijaEstado(estadoProceso nuevoEstado) {
+    this->estado = nuevoEstado; 
+}
+
+int Proceso::dameID() const {
     return id;
 }
 
-int Proceso::dameNumeroLote() const
-{
+int Proceso::dameNumeroLote() const {
     return this->numeroLote;
 }
 
-Calculadora& Proceso::dameCalculadora()
-{
+Calculadora& Proceso::dameCalculadora() {
     return calculadora;
 }
 
-Clock& Proceso::dameReloj()
-{
+Clock& Proceso::dameReloj() {
     return reloj;
 }
 
-std::string Proceso::toString(int etapa) const {
-    std::ostringstream oss; 
+estadoProceso Proceso::dameEstado() const { 
+    return estado; 
+}
+
+std::string Proceso::toString(estadoProceso etapa) const {
+    std::ostringstream oss;
 
     switch (etapa) {
-    case PROCESO:
-        oss << "ID: " << std::setw(4) << std::left << id   
-            << "TME: " << std::setw(4) << std::left << reloj.getEstimatedTimeAmount()
-            << "T.Trans: " << std::setw(4) << std::left << reloj.getElapsedTime()
-            << "\n";
-        return oss.str();
+    case estadoProceso::NUEVO:
+        oss << "ID: " << this->id <<"\n"<<"\n";
+        break;
 
-    case TERMINADO:
-        oss << "ID: " << id
-            << "\nOperación: " << calculadora.operacionToString()
-            << "\nResultado: "
-            << ((calculadora.dameResultado() == std::numeric_limits<float>::lowest())
+    case estadoProceso::LISTO:
+        oss << "ID: " << this->id << "   "
+            << "TME: " << this->reloj.getEstimatedTimeAmount() << "   "
+            << "TT: " << this->reloj.getElapsedTime()<<"\n"<<"\n";
+        break;
+
+    case estadoProceso::EJECUCION:
+        oss << "ID: " << this->id <<"\n"
+            << "Op: " << this->calculadora.operacionToString() << "\n"
+            << "TME: " << this->reloj.getEstimatedTimeAmount() << "\n"
+            << "TT: " << this->reloj.getElapsedTime() <<"\n"
+            << "TR: " << (this->reloj.getEstimatedTimeAmount() - this->reloj.getElapsedTime()) <<"\n"<<"\n";
+        break;
+
+    case estadoProceso::BLOQUEADO:
+        oss << "ID: " << this->id <<"     ";
+        oss << "TB: " <<this->reloj.getBlockedTime()<<"\n"<<"\n";
+        break;
+
+    case estadoProceso::TERMINADO:
+        oss << "ID: " << this->id << "  "
+            << "Op: " << this->calculadora.operacionToString() << "  "
+            << "Res: "
+            << ((this->calculadora.dameResultado() == std::numeric_limits<float>::lowest())
                 ? "ERROR"
-                : std::to_string(calculadora.dameResultado()))
-            << "\n#Lote: " << dameNumeroLote() << "\n\n";
-        return oss.str();
-
-    default:
-        oss << "{id: " << id
-            << ", tme: " << reloj.getEstimatedTimeAmount()
-            << ", resultado: " << calculadora.operacionToString()
-            << " = " << calculadora.dameResultado();
-        return oss.str();
+                : std::to_string(this->calculadora.dameResultado()))<<"\n"<<"\n";
+        break;
     }
+    return oss.str();
 }

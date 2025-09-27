@@ -1,5 +1,18 @@
 #include "clock.h"
 
+Clock::Clock()
+{
+    arriveTime = -1;        
+    endTime = -1;
+    waitingTime = 0;
+    responseTime = -1;      
+    returnTime = -1;
+    serviceTime = 0;
+    estimatedTimeAmount = 0;
+    elapsedTime = 0;
+    blockedTime = 0;
+}
+
 void Clock::setArriveTime(int arriveTime)
 {
     this->arriveTime = arriveTime;
@@ -34,6 +47,16 @@ void Clock::setElapsedTime(int elapsedTime)
     this->elapsedTime = elapsedTime;
 }
 
+void Clock::setBlockedTime(int blockedTime)
+{
+    this->blockedTime = blockedTime;
+}
+
+
+int Clock::getArriveTime() const
+{
+    return arriveTime;
+}
 int Clock::getEndTime() const
 {
     return endTime;
@@ -62,6 +85,11 @@ int Clock::getEstimatedTimeAmount() const
 {
     return estimatedTimeAmount;
 }
+int Clock::getBlockedTime() const
+{
+    return blockedTime;
+}
+
 
 
 // Time calculations
@@ -73,7 +101,11 @@ void Clock::calcReturnTime()
 
 void Clock::calcResponseTime(int generalCounter)
 {
-    setResponseTime(generalCounter - arriveTime);
+    if (arriveTime >= 0) {
+        setResponseTime(generalCounter - arriveTime);
+    } else {
+        setResponseTime(0);
+    }
 }
 
 void Clock::calcServiceTime()
@@ -85,3 +117,8 @@ void Clock::calcWaitingTime()
 {
     setWaitingTime(returnTime - serviceTime);
 }
+int Clock::decreaseBlockedTime()
+{
+    return --blockedTime;
+}
+

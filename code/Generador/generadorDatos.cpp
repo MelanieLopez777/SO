@@ -1,6 +1,5 @@
 #include "generadorDatos.h"
 
-// 🔹 Definiciones reales (se reserva la memoria aquí)
 Proceso gestor[TAM_PROCESOS];
 int contadorProcesos = 0;
 

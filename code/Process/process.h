@@ -17,21 +17,27 @@ using namespace std;
 vector<string> splitLines(const string &s);
 void printTableRow(const string &pendienteStr, const string &ejecucionStr, const string &resultadoStr, int colWidth);
 void imprimirTablaResultados(
-    int lotesPendientes, 
-    int loteEnEjecucion, 
-    int contadorGlobal, 
-    string &pendienteStr, 
-    string &ejecucionStr, 
-    string &resultadoStr, 
-    StaticQueue &pendientes, 
-    Proceso *ejecucion, 
-    StaticQueue &terminado,  
+    int contadorGlobal,
+    string &nuevosStr,
+    string &pendienteStr,
+    string &ejecucionStr,
+    string &resultadoStr,
+    string &bloqueadosStr,
+    StaticQueue &nuevos,
+    StaticQueue &pendientes,
+    Proceso *ejecucion,
+    StaticQueue &terminado,
+    StaticQueue &bloqueados,
     int colWidth);
 void actualizarInformacion(
+    string &nuevosString,
     string &pendientesString, 
     string &ejecucionString, 
     string &resultadoString, 
+    string &bloqueadosString,
+    StaticQueue &nuevos,
     StaticQueue &pendientes, 
     Proceso *ejecucion, 
-    StaticQueue &terminado);
+    StaticQueue &terminado,
+    StaticQueue &bloqueados);
 void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos);

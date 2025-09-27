@@ -7,34 +7,38 @@ StaticQueue::StaticQueue() {
 void StaticQueue::initialize() {
     front = 0;
     rear = MAX_QUEUE_SIZE - 1;
+    count = 0;   
 }
 
 bool StaticQueue::isEmpty() const {
-    return (front == rear + 1) || (front == 0 && rear == MAX_QUEUE_SIZE - 1);
+    return count == 0;
 }
 
 bool StaticQueue::isFull() const {
-    return (front == rear + 2) ||
-           (front == 0 && rear == MAX_QUEUE_SIZE - 2) ||
-           (front == 1 && rear == MAX_QUEUE_SIZE - 1);
+    return count == MAX_QUEUE_SIZE;
 }
 
 void StaticQueue::enqueue(dataType* element) {
     if (isFull()) {
-        std::cerr << "";
+        std::cerr << "[!] Error: Queue is full\n";
         return;
     }
     rear = (rear + 1) % MAX_QUEUE_SIZE;
     data[rear] = element;
-}
-
+    count++;  
+} 
 
 void StaticQueue::dequeue() {
     if (isEmpty()) {
-        std::cerr << "";
+        std::cerr << "[!] Error: Queue is empty\n";
         return;
     }
     front = (front + 1) % MAX_QUEUE_SIZE;
+    count--;   
+}
+
+int StaticQueue::size() const {
+    return count;
 }
 
 dataType* StaticQueue::getFront() const {
@@ -44,22 +48,18 @@ dataType* StaticQueue::getFront() const {
     return data[front];
 }
 
-
-std::string StaticQueue::toString(int etapa) const {
+std::string StaticQueue::toString(estadoProceso etapa) const {
     std::ostringstream oss;
-    int current_index = front;
 
     if (isEmpty()) {
-        oss << "";
-        return oss.str();
+        return "";
     }
 
-    while (true) {
+    int current_index = front;
+    for (int i = 0; i < count; i++) {
         oss << data[current_index]->toString(etapa);
-        if (current_index == rear) {
-            break;
-        }
         current_index = (current_index + 1) % MAX_QUEUE_SIZE;
     }
+
     return oss.str();
 }
