@@ -350,23 +350,22 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                 terminado.enqueue(ejecucion);
                 ejecucion = nullptr;
             }
+        }
 
-             // Desbloquear procesos
-            int nBloq = bloqueado.size();
-            for (int b = 0; b < nBloq; b++) {
-                Proceso* proc = bloqueado.getFront();
-                bloqueado.dequeue();
-                
-                int tiempoRestante = proc->dameReloj().decreaseBlockedTime();
+        // Desbloquear procesos
+        int nBloq = bloqueado.size();
+        for (int b = 0; b < nBloq; b++) {
+            Proceso* proc = bloqueado.getFront();
+            bloqueado.dequeue();
+            
+            int tiempoRestante = proc->dameReloj().decreaseBlockedTime();
 
-                if (tiempoRestante <= 0 && contarEnMemoria() < 4) {
-                    proc->fijaEstado(estadoProceso::LISTO);
-                    pendientes.enqueue(proc);
-                } else {
-                    bloqueado.enqueue(proc); // sigue bloqueado
-                }
+            if (tiempoRestante <= 0 && contarEnMemoria() < 4) {
+                proc->fijaEstado(estadoProceso::LISTO);
+                pendientes.enqueue(proc);
+            } else {
+                bloqueado.enqueue(proc); // sigue bloqueado
             }
-
         }
 
         contadorGlobal++;
