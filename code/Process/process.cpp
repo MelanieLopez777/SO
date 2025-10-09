@@ -138,7 +138,7 @@ void imprimirTablaResultados(
     cout << "Contador Global: " << contadorGlobal << endl;
 }
 
-void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos, int contadorGlobal) {
+void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProcesos) {
     cout << "\n=== TABLA BCP (Bloque de Control de Procesos) ===\n";
 
     // Definir anchos de columna
@@ -149,7 +149,6 @@ void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
 
     // Línea superior
     cout << "+" << string(idWidth, '-') 
-         << "+" << string(opWidth, '-') 
          << "+" << string(opWidth, '-') 
          << "+" << string(timeWidth, '-') 
          << "+" << string(timeWidth, '-') 
@@ -162,7 +161,6 @@ void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
     // Encabezados
     cout << "|" << left << setw(idWidth) << "ID"
          << "|" << left << setw(opWidth) << "Operacion"
-         << "|" << setw(opWidth) << "Contador"
          << "|" << setw(timeWidth) << "TME"
          << "|" << setw(timeWidth) << "T.Lle" << "|"
          << setw(timeWidth) << "T.Fin" << "|"
@@ -173,8 +171,7 @@ void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
 
     // Línea separadora
     cout << "+" << string(idWidth, '-') 
-         << "+" << string(opWidth, '-') 
-         << "+" << string(opWidth, '-') 
+         << "+" << string(opWidth, '-')  
          << "+" << string(timeWidth, '-') 
          << "+" << string(timeWidth, '-') 
          << "+" << string(timeWidth, '-') 
@@ -187,15 +184,15 @@ void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         Clock &clk = arregloProcesos[i].dameReloj();
         Calculadora &calc = arregloProcesos[i].dameCalculadora();
 
-        // Función auxiliar para formatear tiempos
+        //Función auxiliar para formatear tiempos
         auto formatTime = [](int time) -> string {
-            return (time >= 0) ? to_string(time) : "N/A";
+            return (time >= 0) ? to_string(time) : to_string(time);
         };
+        
 
         // Imprimir fila con alineación adecuada
         cout << "|" << right << setw(idWidth) << arregloProcesos[i].dameID()
              << "|" << right << setw(opWidth) << calc.operacionToString()
-             << "|" << right << setw(opWidth) << contadorGlobal
              << "|" << right << setw(timeWidth) << formatTime(clk.getEstimatedTimeAmount())
              << "|" << right << setw(timeWidth) << formatTime(clk.getArriveTime())
              << "|" << right << setw(timeWidth) << formatTime(clk.getEndTime())
@@ -207,7 +204,6 @@ void imprimirTablaBCP(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
 
     // Línea inferior
     cout << "+" << string(idWidth, '-') 
-         << "+" << string(opWidth, '-') 
          << "+" << string(opWidth, '-') 
          << "+" << string(timeWidth, '-') 
          << "+" << string(timeWidth, '-') 
@@ -268,11 +264,24 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                     case 'W': // Error
                     if (ejecucion != nullptr) {
                         ejecucion->dameReloj().setEndTime(contadorGlobal + 1);
+
+                        int tRetorno = ejecucion->dameReloj().getEndTime() - ejecucion->dameReloj().getArriveTime();
+                        int tEspera  = tRetorno - ejecucion->dameReloj().getServiceTime();
+
+                        ejecucion->dameReloj().setReturnTime(tRetorno);
+                        ejecucion->dameReloj().setWaitingTime(tEspera);
+
+                        // Marcar resultado como error
                         ejecucion->dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
                         ejecucion->fijaEstado(estadoProceso::TERMINADO);
                         terminado.enqueue(ejecucion);
                         ejecucion = nullptr;
                     }
+                    break;
+                    case 'N':
+                    break;
+                    case 'B':
+                        imprimirTablaBCP(arregloProcesos, cantidadProcesos);
                     break;
                     case 'P': // Pausa
                         pausa = true;
@@ -313,16 +322,17 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
         }
 
         // Si no hay proceso en ejecucion, tomar uno de listos
-        if (ejecucion == nullptr && !pendientes.isEmpty()) {
-            ejecucion = pendientes.getFront();
-            pendientes.dequeue();
-            ejecucion->fijaEstado(estadoProceso::EJECUCION);
-            
-            //Establecer tiempo de respuesta solo cuando entra por primera vez a ejecución
-            if (ejecucion->dameReloj().getResponseTime() == -1) {
-                ejecucion->dameReloj().setResponseTime(contadorGlobal);
-            }
+       if (ejecucion == nullptr && !pendientes.isEmpty()) {
+        ejecucion = pendientes.getFront();
+        pendientes.dequeue();
+        ejecucion->fijaEstado(estadoProceso::EJECUCION);
+
+        // Establecer tiempo de respuesta solo la PRIMERA vez que entra a CPU
+        if (ejecucion->dameReloj().getResponseTime() == -1) {
+            int tRespuesta = contadorGlobal - ejecucion->dameReloj().getArriveTime();
+            ejecucion->dameReloj().setResponseTime(tRespuesta);
         }
+}
 
         //Procesar ejecución actual
         if (ejecucion != nullptr) {
@@ -336,16 +346,14 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
 
             // Si terminó su tiempo estimado
             if (nuevoElapsed >= ejecucion->dameReloj().getEstimatedTimeAmount()) {
-                ejecucion->dameReloj().setEndTime(contadorGlobal + 1); 
-                
-                ejecucion->dameReloj().setReturnTime(
-                    ejecucion->dameReloj().getEndTime() - ejecucion->dameReloj().getArriveTime()
-                );
-                
-                ejecucion->dameReloj().setWaitingTime(
-                    ejecucion->dameReloj().getReturnTime() - ejecucion->dameReloj().getServiceTime()
-                );
-                
+                ejecucion->dameReloj().setEndTime(contadorGlobal + 1);
+
+                int tRetorno = ejecucion->dameReloj().getEndTime() - ejecucion->dameReloj().getArriveTime();
+                int tEspera  = tRetorno - ejecucion->dameReloj().getServiceTime();
+
+                ejecucion->dameReloj().setReturnTime(tRetorno);
+                ejecucion->dameReloj().setWaitingTime(tEspera);
+
                 ejecucion->fijaEstado(estadoProceso::TERMINADO);
                 terminado.enqueue(ejecucion);
                 ejecucion = nullptr;
@@ -386,7 +394,7 @@ void ejecutarProcesos(Proceso (&arregloProcesos)[TAM_PROCESOS], int cantidadProc
                           resultadoString, bloqueadoString, nuevos, pendientes, ejecucion,
                           terminado, bloqueado, colWidth);
     
-    imprimirTablaBCP(arregloProcesos, cantidadProcesos, contadorGlobal);
+    imprimirTablaBCP(arregloProcesos, cantidadProcesos);
 
     cout << "Presiona Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
