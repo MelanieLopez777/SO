@@ -1,30 +1,73 @@
-#ifndef QUEUE_H
-#define QUEUE_H
+#ifndef STATICQUEUE_H
+#define STATICQUEUE_H
 
 #include <iostream>
-#include <string>
-#include <sstream>
+#include <vector>
 #include <stdexcept>
+#include <sstream>
 #include "../Structure/structures.h"
 
-constexpr int MAX_QUEUE_SIZE = 16;
-using dataType = Proceso;
-
+template <typename T>
 class StaticQueue {
 private:
-    int front, rear, count;
-    dataType* data[MAX_QUEUE_SIZE];
+    std::vector<T> data;
+    size_t maxSize;
+
 public:
-    StaticQueue();
-    void initialize();
-    bool isEmpty() const;
-    bool isFull() const;
-    void enqueue(dataType* element);
-    void dequeue();
-    int size() const;
-    dataType* getFront() const;
-    std::string toString(estadoProceso etapa) const;
+    StaticQueue(size_t size = 100) : maxSize(size) {}
+
+    void enqueue(const T& item) {
+        if (data.size() >= maxSize)
+            throw std::overflow_error("Queue full");
+        data.push_back(item);
+    }
+
+    void dequeue() {
+        if (data.empty())
+            throw std::underflow_error("Queue empty");
+        data.erase(data.begin());
+    }
+
+    T& getFront() {
+        if (data.empty())
+            throw std::underflow_error("Queue empty");
+        return data.front();
+    }
+
+    const T& getFront() const {
+        if (data.empty())
+            throw std::underflow_error("Queue empty");
+        return data.front();
+    }
+
+    bool isEmpty() const {
+        return data.empty();
+    }
+
+    size_t size() const {
+        return data.size();
+    }
+
+    std::string toString() const {
+    std::ostringstream oss;
+    for (const auto& item : data) {
+        oss << item.toString(item.dameEstado()) << "\n";
+    }
+    return oss.str();
+}
+
+
+    std::vector<std::string> toVectorString(estadoProceso estado) const {
+        std::vector<std::string> v;
+        for (const auto& item : data) {
+            if (item.dameEstado() == estado) {
+                v.push_back(item.toString(estado));
+            }
+        }
+        return v;
+    }
 };
 
 
-#endif // QUEUE_H
+
+#endif

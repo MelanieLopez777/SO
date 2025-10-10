@@ -3,7 +3,8 @@
 #include <stdexcept>
 #include <limits>
 #include <cstdlib> 
-#include <ctime>  
+#include <ctime>
+#include <vector>
 #include "../Structure/structures.h"
 
 #define MIN_ID 1
@@ -13,10 +14,8 @@
 #define RANGO_OPERANDO_MAX 100
 #define RANGO_OPERANDO_MIN 0
 
-// 🔹 Declaraciones (no definen memoria aquí)
-extern Proceso gestor[TAM_PROCESOS];
-extern int contadorProcesos;
+extern vector<Proceso> gestor;
 
 bool validarID (int &id);
-void generarDatos();
-void bubbleSort(int cantidadProcesos);
+Proceso generarDatos();
+void bubbleSort();

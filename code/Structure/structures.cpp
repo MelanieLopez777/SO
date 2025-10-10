@@ -42,13 +42,13 @@ std::string Proceso::toString(estadoProceso etapa) const {
 
     switch (etapa) {
     case estadoProceso::NUEVO:
-        oss << "ID: " << this->id <<"\n"<<"\n";
+        oss << "ID: " << this->id;
         break;
 
     case estadoProceso::LISTO:
         oss << "ID: " << this->id << "   "
             << "TME: " << this->reloj.getEstimatedTimeAmount() << "   "
-            << "TT: " << this->reloj.getElapsedTime()<<"\n"<<"\n";
+            << "TT: " << this->reloj.getElapsedTime();
         break;
 
     case estadoProceso::EJECUCION:
@@ -56,12 +56,12 @@ std::string Proceso::toString(estadoProceso etapa) const {
             << "Op: " << this->calculadora.operacionToString() << "\n"
             << "TME: " << this->reloj.getEstimatedTimeAmount() << "\n"
             << "TT: " << this->reloj.getElapsedTime() <<"\n"
-            << "TR: " << (this->reloj.getEstimatedTimeAmount() - this->reloj.getElapsedTime()) <<"\n"<<"\n";
+            << "TR: " << (this->reloj.getEstimatedTimeAmount() - this->reloj.getElapsedTime());
         break;
 
     case estadoProceso::BLOQUEADO:
         oss << "ID: " << this->id <<"     ";
-        oss << "TB: " <<this->reloj.getBlockedTime()<<"\n"<<"\n";
+        oss << "TB: " <<this->reloj.getBlockedTime();
         break;
 
     case estadoProceso::TERMINADO:
@@ -70,7 +70,7 @@ std::string Proceso::toString(estadoProceso etapa) const {
             << "Res: "
             << ((this->calculadora.dameResultado() == std::numeric_limits<float>::lowest())
                 ? "ERROR"
-                : std::to_string(this->calculadora.dameResultado()))<<"\n"<<"\n";
+                : std::to_string(this->calculadora.dameResultado()));
         break;
     }
     return oss.str();
