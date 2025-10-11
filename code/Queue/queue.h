@@ -10,13 +10,13 @@
 template <typename T>
 class StaticQueue {
 private:
-    std::vector<T> data;
+    std::vector<T*> data;  // usar punteros
     size_t maxSize;
 
 public:
     StaticQueue(size_t size = 100) : maxSize(size) {}
 
-    void enqueue(const T& item) {
+    void enqueue(T* item) {
         if (data.size() >= maxSize)
             throw std::overflow_error("Queue full");
         data.push_back(item);
@@ -28,13 +28,7 @@ public:
         data.erase(data.begin());
     }
 
-    T& getFront() {
-        if (data.empty())
-            throw std::underflow_error("Queue empty");
-        return data.front();
-    }
-
-    const T& getFront() const {
+    T* getFront() {
         if (data.empty())
             throw std::underflow_error("Queue empty");
         return data.front();
@@ -49,25 +43,24 @@ public:
     }
 
     std::string toString() const {
-    std::ostringstream oss;
-    for (const auto& item : data) {
-        oss << item.toString(item.dameEstado()) << "\n";
+        std::ostringstream oss;
+        for (const auto* item : data) {
+            oss << item->toString(item->dameEstado()) << "\n";
+        }
+        return oss.str();
     }
-    return oss.str();
-}
-
 
     std::vector<std::string> toVectorString(estadoProceso estado) const {
         std::vector<std::string> v;
-        for (const auto& item : data) {
-            if (item.dameEstado() == estado) {
-                v.push_back(item.toString(estado));
+        for (const auto& item : data) {     // item ahora es un puntero T*
+            if (item->dameEstado() == estado) {
+                v.push_back(item->toString(estado));
             }
         }
         return v;
     }
-};
 
+};
 
 
 #endif

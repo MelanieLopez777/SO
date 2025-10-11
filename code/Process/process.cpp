@@ -38,6 +38,18 @@ void actualizarInformacion(
     bloqueadosString = bloqueados.toString();
 }
 
+void actualizarInformacionBCP(vector<Proceso>& arregloProcesos, int contadorGlobal) {
+    for (auto& proceso : arregloProcesos) {
+        if (proceso.dameEstado() != estadoProceso::TERMINADO && proceso.dameReloj().getArriveTime() != -1) {
+            Clock& clk = proceso.dameReloj();
+            int tiempoRetornoParcial = contadorGlobal - clk.getArriveTime();
+            clk.setReturnTime(tiempoRetornoParcial);
+            int tiempoEsperaParcial = tiempoRetornoParcial - clk.getServiceTime();
+            clk.setWaitingTime(tiempoEsperaParcial);
+        }
+    }
+}
+
 void printTableRow(const string &nuevosStr,
                    const string &pendientesStr,
                    const string &ejecucionStr,
@@ -105,7 +117,6 @@ void imprimirTablaResultados(
     cout << separador << endl;
 
     // --- Bloqueados ---
-    cout << "\nProcesos Bloqueados:" << endl;
     string sepBloq = "+" + string(colWidth + 1, '-') + "+";
     cout << sepBloq << endl;
     cout << "| " << left << setw(colWidth) << "Bloqueados" << "|" << endl;
@@ -128,83 +139,84 @@ void imprimirTablaResultados(
 void imprimirTablaBCP(vector<Proceso>& arregloProcesos, int cantidadProcesos) {
     cout << "\n=== TABLA BCP (Bloque de Control de Procesos) ===\n";
 
-    const int idWidth = 6, estadoWidth = 14, opWidth = 15;
-    const int tWidth = 10, resWidth = 12;
+    // Definir anchos de columna
+    const int idWidth = 6;
+    const int opWidth = 12;
+    const int timeWidth = 12;
+    const int standardWidth = 12;
 
-    cout << "+" << string(idWidth, '-')
-         << "+" << string(estadoWidth, '-')
+    // Línea superior
+    cout << "+" << string(idWidth, '-') 
          << "+" << string(opWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(resWidth, '-') << "+" << endl;
+         << "+" << string(opWidth, '-')  
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') << "+" << endl;
 
+    // Encabezados
     cout << "|" << left << setw(idWidth) << "ID"
-         << "|" << left << setw(estadoWidth) << "Estado"
          << "|" << left << setw(opWidth) << "Operacion"
-         << "|" << left << setw(tWidth) << "T.Lleg"
-         << "|" << left << setw(tWidth) << "T.Fin"
-         << "|" << left << setw(tWidth) << "T.Ret"
-         << "|" << left << setw(tWidth) << "T.Esp"
-         << "|" << left << setw(tWidth) << "T.Serv"
-         << "|" << left << setw(tWidth) << "T.Rest"
-         << "|" << left << setw(tWidth) << "T.Resp"
-         << "|" << left << setw(resWidth) << "Resultado" << "|" << endl;
+         << "|" << left << setw(opWidth) << "Resultado"
+         << "|" << setw(timeWidth) << "TME"
+         << "|" << setw(timeWidth) << "T.Lle" << "|"
+         << setw(timeWidth) << "T.Fin" << "|"
+         << setw(standardWidth) << "T.Esp" << "|"
+         << setw(standardWidth) << "T.Res" << "|"
+         << setw(standardWidth) << "T.Ret" << "|"
+         << setw(standardWidth) << "T.Ser" << "|" << endl;
 
-    cout << "+" << string(idWidth, '-')
-         << "+" << string(estadoWidth, '-')
+    // Línea separadora
+    cout << "+" << string(idWidth, '-') 
          << "+" << string(opWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(resWidth, '-') << "+" << endl;
+         << "+" << string(opWidth, '-')    
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') << "+" << endl;
 
-    for (auto it = arregloProcesos.begin(); it != arregloProcesos.end(); ++it) {
-        Clock &clk = it->dameReloj();
-        Calculadora &calc = it->dameCalculadora();
+    for (int i = 0; i < cantidadProcesos; i++) {
+        Clock &clk = arregloProcesos[i].dameReloj();
+        Calculadora &calc = arregloProcesos[i].dameCalculadora();
 
-        string estado;
-        switch (it->dameEstado()) {
-            case estadoProceso::NUEVO: estado = "Nuevo"; break;
-            case estadoProceso::LISTO: estado = "Listo"; break;
-            case estadoProceso::EJECUCION: estado = "Ejecucion"; break;
-            case estadoProceso::BLOQUEADO: estado = "Bloqueado (" + to_string(clk.getBlockedTime()) + ")"; break;
-            case estadoProceso::TERMINADO:
-                if (calc.dameResultado() == numeric_limits<float>::lowest())
-                    estado = "Error";
-                else
-                    estado = "Terminado (OK)";
-                break;
-        }
-
-        auto valOrNA = [](int v) { return (v >= 0) ? to_string(v) : string("N/A"); };
-        auto resOrNA = [&](float r) {
-            if (it->dameEstado() == estadoProceso::TERMINADO)
-                return (r == numeric_limits<float>::lowest()) ? string("Error") : to_string(r);
-            return string("N/A");
+        //Función auxiliar para formatear tiempos
+        auto formatTime = [](int time) -> string {
+            return (time >= 0) ? to_string(time) : "N/A";
         };
+        
 
-        cout << "|" << right << setw(idWidth) << it->dameID()
-             << "|" << left << setw(estadoWidth) << estado
-             << "|" << left << setw(opWidth) << calc.operacionToString()
-             << "|" << right << setw(tWidth) << valOrNA(clk.getArriveTime())
-             << "|" << right << setw(tWidth) << valOrNA(clk.getEndTime())
-             << "|" << right << setw(tWidth) << valOrNA(clk.getReturnTime())
-             << "|" << right << setw(tWidth) << valOrNA(clk.getWaitingTime())
-             << "|" << right << setw(tWidth) << clk.getServiceTime()
-             << "|" << right << setw(tWidth) << (it->dameEstado() == estadoProceso::TERMINADO ? string("0") : to_string(max(0, clk.getEstimatedTimeAmount() - clk.getElapsedTime())))
-             << "|" << right << setw(tWidth) << valOrNA(clk.getResponseTime())
-             << "|" << left << setw(resWidth) << resOrNA(calc.dameResultado())
-             << "|" << endl;
+        // Imprimir fila con alineación adecuada
+        cout << "|" << right << setw(idWidth) << arregloProcesos[i].dameID()
+             << "|" << right << setw(opWidth) << calc.operacionToString()
+             << "|" << right << setw(opWidth) << ((calc.dameResultado() == std::numeric_limits<float>::lowest())
+                ? "ERROR"
+                : std::to_string(calc.dameResultado()))
+             << "|" << right << setw(timeWidth) << formatTime(clk.getEstimatedTimeAmount())
+             << "|" << right << setw(timeWidth) << formatTime(clk.getArriveTime())
+             << "|" << right << setw(timeWidth) << formatTime(clk.getEndTime())
+             << "|" << right << setw(standardWidth) << formatTime(clk.getWaitingTime())
+             << "|" << right << setw(standardWidth) << formatTime(clk.getResponseTime())
+             << "|" << right << setw(standardWidth) << formatTime(clk.getReturnTime())
+             << "|" << right << setw(standardWidth) << clk.getServiceTime() << "|" << endl;
     }
 
-    cout << "+" << string(idWidth, '-')
-         << "+" << string(estadoWidth, '-')
-         << "+" << string(opWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(tWidth, '-')
-         << "+" << string(tWidth, '-') << "+" << string(resWidth, '-') << "+" << endl;
+    // Línea inferior
+    cout << "+" << string(idWidth, '-') 
+         << "+" << string(opWidth, '-') 
+         << "+" << string(opWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(timeWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') 
+         << "+" << string(standardWidth, '-') << "+" << endl;
 }
 
 
@@ -215,19 +227,21 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
     const int tiempoBloqueo = 8;
     string nuevoString, pendientesString, ejecucionString, resultadoString, bloqueadoString;
 
-    // Colas por valor
+    // Colas por referencia
     StaticQueue<Proceso> nuevos, pendientes, bloqueado, terminado;
     
-    Proceso ejecucion;
+    Proceso* ejecucion;
     bool hayEjecucion = false;
     bool pausa = false;
 
     cout << "Iniciando ejecución con " << cantidadProcesos << " procesos" << endl;
 
+    arregloProcesos.reserve(100);
+
     // Inicializar cola de nuevos
     for (auto &p : arregloProcesos) {
         p.fijaEstado(estadoProceso::NUEVO);
-        nuevos.enqueue(p);
+        nuevos.enqueue(&p);
     }
 
     auto contarEnMemoria = [&]() {
@@ -245,36 +259,43 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
             switch(tecla) {
                 case 'E': // Interrupción E/S
                     if (hayEjecucion) { 
-                        ejecucion.fijaEstado(estadoProceso::BLOQUEADO);
-                        ejecucion.dameReloj().setBlockedTime(tiempoBloqueo);
+                        ejecucion->fijaEstado(estadoProceso::BLOQUEADO);
+                        ejecucion->dameReloj().setBlockedTime(tiempoBloqueo);
                         bloqueado.enqueue(ejecucion);
                         hayEjecucion = false;
                     }
                     break;
                 case 'W': // Error
                     if (hayEjecucion) {
-                        ejecucion.dameReloj().setEndTime(contadorGlobal + 1);
+                        ejecucion->dameReloj().setEndTime(contadorGlobal + 1);
 
-                        int tRetorno = ejecucion.dameReloj().getEndTime() - ejecucion.dameReloj().getArriveTime();
-                        int tEspera  = tRetorno - ejecucion.dameReloj().getServiceTime();
+                        int tRetorno = ejecucion->dameReloj().getEndTime() - ejecucion->dameReloj().getArriveTime();
+                        int tEspera  = tRetorno - ejecucion->dameReloj().getServiceTime();
 
-                        ejecucion.dameReloj().setReturnTime(tRetorno);
-                        ejecucion.dameReloj().setWaitingTime(tEspera);
+                        ejecucion->dameReloj().setReturnTime(tRetorno);
+                        ejecucion->dameReloj().setWaitingTime(tEspera);
 
-                        ejecucion.dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
-                        ejecucion.fijaEstado(estadoProceso::TERMINADO);
+                        ejecucion->dameCalculadora().fijaResultado(numeric_limits<float>::lowest());
+                        ejecucion->fijaEstado(estadoProceso::TERMINADO);
                         terminado.enqueue(ejecucion);
                         hayEjecucion = false;
+                        ejecucion = nullptr;
                     }
                     break;
                 case 'N': // Nuevo proceso generado
-                    nuevos.enqueue(generarDatos());
-                    arregloProcesos.push_back(generarDatos());
+                    {
+                        Proceso nuevo = generarDatos();
+                        arregloProcesos.push_back(nuevo);
+                        nuevos.enqueue(&arregloProcesos.back());
+                    }
                     break;
                 case 'B': // Mostrar BCP y pausar
                     pausa = true;
                     system(CLEAR);
-                    imprimirTablaBCP(arregloProcesos, cantidadProcesos);
+
+                    actualizarInformacionBCP(arregloProcesos, contadorGlobal);
+                    imprimirTablaBCP(arregloProcesos, arregloProcesos.size());
+
                     cout << "\nPresiona 'C' para continuar la simulación..." << endl;
                     while (pausa) {
                         if (_kbhit()) {
@@ -296,8 +317,8 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
         if(pausa) {
             imprimirTablaResultados(
                 contadorGlobal, nuevoString, pendientesString, ejecucionString,
-                resultadoString, bloqueadoString, nuevos, pendientes, hayEjecucion ? &ejecucion : nullptr,
-                terminado, bloqueado, colWidth);
+                resultadoString, bloqueadoString,
+                nuevos, pendientes, ejecucion, terminado, bloqueado, colWidth);
 
             while(pausa) {
                 if(_kbhit()) {
@@ -311,12 +332,13 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
 
         // Mover procesos de nuevos a listos si hay espacio
         while (!nuevos.isEmpty() && contarEnMemoria() < 4) {
-            Proceso p = nuevos.getFront();
-            if (p.dameReloj().getArriveTime() == -1) {
-                p.dameReloj().setArriveTime(contadorGlobal);
+            Proceso* p = nuevos.getFront();
+            
+            if (p->dameReloj().getArriveTime() == -1) {
+                p->dameReloj().setArriveTime(contadorGlobal);
             }
             nuevos.dequeue();
-            p.fijaEstado(estadoProceso::LISTO);
+            p->fijaEstado(estadoProceso::LISTO);
             pendientes.enqueue(p);
         }
 
@@ -324,45 +346,46 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
         if (!hayEjecucion && !pendientes.isEmpty()) {
             ejecucion = pendientes.getFront();
             pendientes.dequeue();
-            ejecucion.fijaEstado(estadoProceso::EJECUCION);
+            ejecucion->fijaEstado(estadoProceso::EJECUCION);
 
-            if (ejecucion.dameReloj().getResponseTime() == -1) {
-                 ejecucion.dameReloj().calcResponseTime(contadorGlobal);
+            if (ejecucion->dameReloj().getResponseTime() == -1) {
+                 ejecucion->dameReloj().calcResponseTime(contadorGlobal);
             }
             hayEjecucion = true;
         }
 
         // Procesar ejecución actual
         if (hayEjecucion) {
-            int nuevoElapsed = ejecucion.dameReloj().getElapsedTime() + 1;
-            ejecucion.dameReloj().setElapsedTime(nuevoElapsed);
-            ejecucion.dameReloj().setServiceTime(ejecucion.dameReloj().getServiceTime() + 1);
-            ejecucion.dameCalculadora().operar();
+            int nuevoElapsed = ejecucion->dameReloj().getElapsedTime() + 1;
+            ejecucion->dameReloj().setElapsedTime(nuevoElapsed);
+            ejecucion->dameReloj().setServiceTime(ejecucion->dameReloj().getServiceTime() + 1);
+            ejecucion->dameCalculadora().operar();
 
-            if (nuevoElapsed >= ejecucion.dameReloj().getEstimatedTimeAmount()) {
-                ejecucion.dameReloj().setEndTime(contadorGlobal + 1);
+            if (nuevoElapsed >= ejecucion->dameReloj().getEstimatedTimeAmount()) {
+                ejecucion->dameReloj().setEndTime(contadorGlobal + 1);
 
                 // Calcular tiempos derivados
-                ejecucion.dameReloj().calcReturnTime();   // T. retorno = fin - llegada
-                ejecucion.dameReloj().calcWaitingTime();  // T. espera = retorno - servicio
-                ejecucion.dameReloj().calcServiceTime();  // T. servicio = retorno - espera
+                ejecucion->dameReloj().calcReturnTime();   // T. retorno = fin - llegada
+                ejecucion->dameReloj().calcWaitingTime();  // T. espera = retorno - servicio
+                ejecucion->dameReloj().calcServiceTime();  // T. servicio = retorno - espera
 
-                ejecucion.fijaEstado(estadoProceso::TERMINADO);
+                ejecucion->fijaEstado(estadoProceso::TERMINADO);
                 terminado.enqueue(ejecucion);
                 hayEjecucion = false;
+                ejecucion = nullptr;
             }
         }
 
         // Desbloquear procesos
         int nBloq = bloqueado.size();
         for (int b = 0; b < nBloq; b++) {
-            Proceso proc = bloqueado.getFront();
+            Proceso* proc = bloqueado.getFront();
             bloqueado.dequeue();
 
-            int tiempoRestante = proc.dameReloj().decreaseBlockedTime();
+            int tiempoRestante = proc->dameReloj().decreaseBlockedTime();
 
             if (tiempoRestante <= 0 && contarEnMemoria() < 4) {
-                proc.fijaEstado(estadoProceso::LISTO);
+                proc->fijaEstado(estadoProceso::LISTO);
                 pendientes.enqueue(proc);
             } else {
                 bloqueado.enqueue(proc);
@@ -374,19 +397,20 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
         // Imprimir tabla
         imprimirTablaResultados(
             contadorGlobal, nuevoString, pendientesString, ejecucionString,
-            resultadoString, bloqueadoString, nuevos, pendientes, hayEjecucion ? &ejecucion : nullptr,
-            terminado, bloqueado, colWidth);
+            resultadoString, bloqueadoString,
+            nuevos, pendientes, ejecucion, terminado, bloqueado, colWidth);
 
         this_thread::sleep_for(chrono::seconds(1));
     }
 
     // Impresión final
     imprimirTablaResultados(
-        contadorGlobal, nuevoString, pendientesString, ejecucionString,
-        resultadoString, bloqueadoString, nuevos, pendientes, hayEjecucion ? &ejecucion : nullptr,
-        terminado, bloqueado, colWidth);
+            contadorGlobal, nuevoString, pendientesString, ejecucionString,
+            resultadoString, bloqueadoString,
+            nuevos, pendientes, ejecucion, terminado, bloqueado, colWidth);
 
-    imprimirTablaBCP(arregloProcesos, cantidadProcesos);
+    actualizarInformacionBCP(arregloProcesos, contadorGlobal);
+    imprimirTablaBCP(arregloProcesos, arregloProcesos.size());
 
     cout << "Presiona Enter para continuar...";
     cin.ignore(numeric_limits<streamsize>::max(), '\n');
