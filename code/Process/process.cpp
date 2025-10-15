@@ -42,10 +42,13 @@ void actualizarInformacionBCP(vector<Proceso>& arregloProcesos, int contadorGlob
     for (auto& proceso : arregloProcesos) {
         if (proceso.dameEstado() != estadoProceso::TERMINADO && proceso.dameReloj().getArriveTime() != -1) {
             Clock& clk = proceso.dameReloj();
-            int tiempoRetornoParcial = contadorGlobal - clk.getArriveTime();
+            /*int tiempoRetornoParcial = contadorGlobal - clk.getArriveTime();
             clk.setReturnTime(tiempoRetornoParcial);
             int tiempoEsperaParcial = tiempoRetornoParcial - clk.getServiceTime();
             clk.setWaitingTime(tiempoEsperaParcial);
+            */
+           int tiempoEsperaParcial = contadorGlobal - clk.getArriveTime() - clk.getElapsedTime();
+           clk.setWaitingTime(tiempoEsperaParcial);
         }
     }
 }
@@ -263,6 +266,7 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
                         ejecucion->dameReloj().setBlockedTime(tiempoBloqueo);
                         bloqueado.enqueue(ejecucion);
                         hayEjecucion = false;
+                        ejecucion = nullptr;
                     }
                     break;
                 case 'W': // Error
