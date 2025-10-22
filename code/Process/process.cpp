@@ -41,14 +41,12 @@ void actualizarInformacion(
 void actualizarInformacionBCP(vector<Proceso>& arregloProcesos, int contadorGlobal) {
     for (auto& proceso : arregloProcesos) {
         if (proceso.dameEstado() != estadoProceso::TERMINADO && proceso.dameReloj().getArriveTime() != -1) {
-            Clock& clk = proceso.dameReloj();
-            /*int tiempoRetornoParcial = contadorGlobal - clk.getArriveTime();
-            clk.setReturnTime(tiempoRetornoParcial);
-            int tiempoEsperaParcial = tiempoRetornoParcial - clk.getServiceTime();
-            clk.setWaitingTime(tiempoEsperaParcial);
-            */
+           Clock& clk = proceso.dameReloj();
+           Calculadora& calc = proceso.dameCalculadora();
            int tiempoEsperaParcial = contadorGlobal - clk.getArriveTime() - clk.getElapsedTime();
            clk.setWaitingTime(tiempoEsperaParcial);
+           int resultadoParcial = 0;
+           calc.fijaResultado(resultadoParcial);
         }
     }
 }
@@ -223,10 +221,10 @@ void imprimirTablaBCP(vector<Proceso>& arregloProcesos, int cantidadProcesos) {
 }
 
 
-void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
+void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos, int quantum)
 {
     const int colWidth = 35; 
-    int contadorGlobal = 0;
+    int contadorGlobal = 0, contadorQuantum=0;
     const int tiempoBloqueo = 8;
     string nuevoString, pendientesString, ejecucionString, resultadoString, bloqueadoString;
 
@@ -365,6 +363,8 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
             ejecucion->dameReloj().setServiceTime(ejecucion->dameReloj().getServiceTime() + 1);
             ejecucion->dameCalculadora().operar();
 
+            contadorQuantum++;
+
             if (nuevoElapsed >= ejecucion->dameReloj().getEstimatedTimeAmount()) {
                 ejecucion->dameReloj().setEndTime(contadorGlobal + 1);
 
@@ -377,6 +377,13 @@ void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos)
                 terminado.enqueue(ejecucion);
                 hayEjecucion = false;
                 ejecucion = nullptr;
+            }
+            else if (contadorQuantum >= quantum) {
+                ejecucion->fijaEstado(estadoProceso::LISTO);
+                pendientes.enqueue(ejecucion);
+                hayEjecucion = false;
+                ejecucion = nullptr;
+                contadorQuantum = 0;
             }
         }
 

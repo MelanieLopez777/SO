@@ -43,4 +43,4 @@ void imprimirTablaResultados(
     int colWidth);
 
 void imprimirTablaBCP(vector<Proceso>& arregloProcesos, int cantidadProcesos);
-void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos);
+void ejecutarProcesos(vector<Proceso>& arregloProcesos, int cantidadProcesos, int quantum);
