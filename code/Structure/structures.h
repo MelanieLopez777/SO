@@ -30,6 +30,7 @@ private:
     estadoProceso estado;
     int numeroLote;
     int id;
+    int tamanio;
 
 public:
 
@@ -38,10 +39,12 @@ public:
     void fijaID(int id);
     void fijaNumeroLote(int numeroLote);
     void fijaEstado (estadoProceso nuevoEstado);
+    void fijaTamanio(int tamanio);
     int dameID() const;
     int dameNumeroLote() const;
     Calculadora& dameCalculadora();
     Clock& dameReloj();
+    int dameTamanio() const;
     estadoProceso dameEstado() const;
     std::string toString(estadoProceso etapa) const;
 };

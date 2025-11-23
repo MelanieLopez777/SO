@@ -2,7 +2,7 @@
 #define STATICQUEUE_H
 
 #include <iostream>
-#include <vector>
+#include <deque>
 #include <stdexcept>
 #include <sstream>
 #include "../Structure/structures.h"
@@ -10,7 +10,7 @@
 template <typename T>
 class StaticQueue {
 private:
-    std::vector<T*> data;  // usar punteros
+    std::deque<T*> data;
     size_t maxSize;
 
 public:
@@ -42,6 +42,10 @@ public:
         return data.size();
     }
 
+    const std::deque<T*>& getData() const {
+        return data;
+    }
+
     std::string toString() const {
         std::ostringstream oss;
         for (const auto* item : data) {
@@ -50,9 +54,9 @@ public:
         return oss.str();
     }
 
-    std::vector<std::string> toVectorString(estadoProceso estado) const {
-        std::vector<std::string> v;
-        for (const auto& item : data) {     // item ahora es un puntero T*
+    std::deque<std::string> todequeString(estadoProceso estado) const {
+        std::deque<std::string> v;
+        for (const auto& item : data) {
             if (item->dameEstado() == estado) {
                 v.push_back(item->toString(estado));
             }

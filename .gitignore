@@ -1,0 +1,5 @@
+.cache
+.vscode
+code/.vscode
+code/build/*
+!code/build/.gitkeep

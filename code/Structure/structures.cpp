@@ -21,6 +21,10 @@ int Proceso::dameID() const {
     return id;
 }
 
+void Proceso::fijaTamanio(int tamanio) {
+    this->tamanio = tamanio; 
+}
+
 int Proceso::dameNumeroLote() const {
     return this->numeroLote;
 }
@@ -31,6 +35,10 @@ Calculadora& Proceso::dameCalculadora() {
 
 Clock& Proceso::dameReloj() {
     return reloj;
+}
+
+int Proceso::dameTamanio() const {
+    return tamanio;
 }
 
 estadoProceso Proceso::dameEstado() const { 

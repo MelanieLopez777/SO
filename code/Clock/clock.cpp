@@ -117,6 +117,12 @@ void Clock::calcWaitingTime()
 {
     setWaitingTime(returnTime - serviceTime);
 }
+
+void Clock::calcElapsedTime()
+{
+    this->elapsedTime++;
+}
+
 int Clock::decreaseBlockedTime()
 {
     return --blockedTime;
