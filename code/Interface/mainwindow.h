@@ -74,5 +74,6 @@ private:
     QTableWidget *memoriaTable;
     QTextEdit *ejecucionText;
     QLabel *nuevosLabel;
+    QLabel *suspendidosLabel;
     QLabel *framesLabel;
 };

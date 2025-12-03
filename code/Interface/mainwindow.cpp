@@ -106,6 +106,7 @@ void MainWindow::setupUI()
     memoriaTable->setColumnWidth(5, 40); // Uso
     
     nuevosLabel = new QLabel("Procesos Nuevos: 0");
+    suspendidosLabel = new QLabel("Procesos suspendidos: 0");
     framesLabel = new QLabel("Marcos Libres: 44/44");
     framesLabel->setStyleSheet("font-weight: bold; color: darkgreen;");
 
@@ -118,6 +119,7 @@ void MainWindow::setupUI()
     processLayout->addWidget(new QLabel("En Ejecución"), 2, 1);
     processLayout->addWidget(ejecucionText, 3, 1);
     processLayout->addWidget(nuevosLabel, 4, 0);
+    processLayout->addWidget(suspendidosLabel, 4, 1);
     processLayout->addWidget(new QLabel("Mapa de Memoria (Paginación)"), 0, 2, 1, 2);
     processLayout->addWidget(memoriaTable, 1, 2, 4, 2);
     processLayout->addWidget(framesLabel, 5, 2);
@@ -242,6 +244,43 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             memWin.exec(); 
             break;
         }
+    
+        case Qt::Key_S:
+            scheduler->suspendProcess();
+            if (!scheduler->getSuspendidosQueue().isEmpty())
+            {
+                // Obtenemos el puntero al proceso siguiente (el del frente)
+                Proceso* siguiente = scheduler->getSuspendidosQueue().getFront();
+
+                suspendidosLabel->setText(
+                    "Procesos Suspendidos: " + QString::number(scheduler->getSuspendidosQueue().size()) + "\n" +
+                    "Proceso Siguiente: ID " + QString::number(siguiente->dameID())  + " | Tam " + QString::number(siguiente->dameTamanio())
+                );
+            }
+            else
+            {
+                suspendidosLabel->setText("Procesos Suspendidos: " + QString::number(scheduler->getSuspendidosQueue().size()));
+            }
+            break;
+            
+        case Qt::Key_R:
+            scheduler->returnProcess();
+            if (!scheduler->getSuspendidosQueue().isEmpty())
+            {
+                // Obtenemos el puntero al proceso siguiente (el del frente)
+                Proceso* siguiente = scheduler->getSuspendidosQueue().getFront();
+
+                suspendidosLabel->setText(
+                    "Procesos Suspendidos: " + QString::number(scheduler->getSuspendidosQueue().size()) + "\n" +
+                    "Proceso Siguiente (ID): " + QString::number(siguiente->dameID()) + " | Tam " + QString::number(siguiente->dameTamanio())
+                );
+            }
+            else
+            {
+                suspendidosLabel->setText("Procesos Suspendidos: " + QString::number(scheduler->getSuspendidosQueue().size()));
+            }
+            break;
+
         default:
             QWidget::keyPressEvent(event);
     }

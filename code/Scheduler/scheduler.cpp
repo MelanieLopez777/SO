@@ -27,14 +27,24 @@ void Scheduler::inicializarMemoria() {
             memoria[i].libre = false;
             memoria[i].numeroPagina = -1;
             memoria[i].espacioOcupado = 5;
+            memoria[i].estadoStr = "SO";
         } else {
             memoria[i].idProceso = -1;
             memoria[i].libre = true;
             memoria[i].numeroPagina = -1;
             memoria[i].espacioOcupado = 0;
+            memoria[i].estadoStr = "N/A";
         }
     }
     marcosLibres = 44;
+}
+
+void Scheduler::actualizarEstadoEnMarcos(int id, string nuevoEstado) {
+    for (int i = 0; i < 48; i++) {
+        if (memoria[i].idProceso == id) {
+            memoria[i].estadoStr = nuevoEstado;
+        }
+    }
 }
 
 bool Scheduler::hayEspacioPara(int tamanio) {
@@ -52,6 +62,7 @@ void Scheduler::asignarMemoria(Proceso* p) {
             memoria[i].libre = false;
             memoria[i].idProceso = p->dameID();
             memoria[i].numeroPagina = paginasAsignadas;
+            memoria[i].estadoStr = p->estadoToString();
             if (paginasAsignadas == paginasNecesarias - 1) {
                 int residuo = tamTotal % 5;
                 memoria[i].espacioOcupado = (residuo == 0) ? 5 : residuo;
@@ -71,6 +82,7 @@ void Scheduler::liberarMemoria(Proceso* p) {
             memoria[i].idProceso = -1;
             memoria[i].numeroPagina = -1;
             memoria[i].espacioOcupado = 0;
+            memoria[i].estadoStr = "N/A";
             marcosLibres++;
         }
     }
@@ -129,6 +141,7 @@ void Scheduler::injectProcess()
     if (hayEspacioPara(p_ptr->dameTamanio())) {
         asignarMemoria(p_ptr);
         p_ptr->fijaEstado(estadoProceso::LISTO);
+        actualizarEstadoEnMarcos(p.dameID(), "Listo");
         if(p_ptr->dameReloj().getArriveTime() == -1)
              p_ptr->dameReloj().setArriveTime(contadorGlobal);
              
@@ -145,6 +158,7 @@ void Scheduler::interruptProcess()
     if (ejecucion != nullptr) {
         qDebug() << "Bloqueo de Proceso ID: " << ejecucion->dameID();
         ejecucion->fijaEstado(estadoProceso::BLOQUEADO);
+        actualizarEstadoEnMarcos(ejecucion->dameID(), "Bloqueado");
         ejecucion->dameReloj().setBlockedTime(8);
         bloqueado.enqueue(ejecucion);
         ejecucion = nullptr;
@@ -181,7 +195,7 @@ void Scheduler::tick()
     emit simulationUpdated();
     
     // 7. Checar parada
-    if (nuevos.isEmpty() && pendientes.isEmpty() && bloqueado.isEmpty() && ejecucion == nullptr) {
+    if (nuevos.isEmpty() && pendientes.isEmpty() && bloqueado.isEmpty() && ejecucion == nullptr && suspendidos.isEmpty()) {
         timer->stop();
         emit simulationFinished();
     }
@@ -195,6 +209,7 @@ void Scheduler::cargarNuevosAListos()
         
         asignarMemoria(p);
         p->fijaEstado(estadoProceso::LISTO);
+        actualizarEstadoEnMarcos(p->dameID(), "Listo");
         p->dameReloj().setArriveTime(contadorGlobal);
         pendientes.enqueue(p);
     }
@@ -214,6 +229,7 @@ void Scheduler::manejarProcesoEnEjecucion()
         ejecucion = pendientes.getFront();
         pendientes.dequeue();
         ejecucion->fijaEstado(estadoProceso::EJECUCION);
+        actualizarEstadoEnMarcos(ejecucion->dameID(), "Ejecucion");
         contadorQuantum = 0;
 
         if (ejecucion->dameReloj().getResponseTime() == -1) {
@@ -243,6 +259,7 @@ void Scheduler::manejarProcesoEnEjecucion()
         }
         else if (contadorQuantum >= quantum) {
             ejecucion->fijaEstado(estadoProceso::LISTO);
+            actualizarEstadoEnMarcos(ejecucion->dameID(), "Listo");
             pendientes.enqueue(ejecucion);
             ejecucion = nullptr;
             contadorQuantum = 0;
@@ -261,10 +278,61 @@ void Scheduler::manejarProcesosBloqueados()
 
         if (tiempoRestante <= 0) {
             proc->fijaEstado(estadoProceso::LISTO);
+            actualizarEstadoEnMarcos(proc->dameID(), "Listo");
             pendientes.enqueue(proc);
         } else {
             bloqueado.enqueue(proc);
         }
+    }
+}
+
+void Scheduler::suspendProcess()
+{
+    if (bloqueado.isEmpty()) return;
+
+    Proceso* p = bloqueado.getFront();
+    bloqueado.dequeue();
+
+    p->fijaEstado(estadoProceso::SUSPENDIDO);
+    actualizarEstadoEnMarcos(p->dameID(), "Suspendido");
+    liberarMemoria(p); 
+
+    suspendidos.enqueue(p);
+    guardarArchivoSuspendidos();
+
+    emit simulationUpdated();
+}
+
+void Scheduler::returnProcess()
+{
+    if (suspendidos.isEmpty()) return;
+
+    Proceso* p = suspendidos.getFront();
+
+    if (hayEspacioPara(p->dameTamanio())) {
+        
+        suspendidos.dequeue();
+        asignarMemoria(p);
+        p->fijaEstado(estadoProceso::LISTO);
+        actualizarEstadoEnMarcos(p->dameID(), "Listo");
+        pendientes.enqueue(p);
+        guardarArchivoSuspendidos();
+
+        emit simulationUpdated();
+    }
+}
+
+void Scheduler::guardarArchivoSuspendidos()
+{
+    QFile file("suspendidos.txt");
+    if (file.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        QTextStream out(&file);
+        auto datos = suspendidos.getData();
+        for (Proceso* p : datos) {
+            QString datosProceso = QString::fromStdString(p->toString(estadoProceso::SUSPENDIDO));
+            out << datosProceso;
+        }
+        file.close();
     }
 }
 
@@ -273,5 +341,6 @@ Proceso* Scheduler::getProcesoEnEjecucion() const { return ejecucion; }
 StaticQueue<Proceso>& Scheduler::getNuevosQueue() { return nuevos; }
 StaticQueue<Proceso>& Scheduler::getListosQueue() { return pendientes; }
 StaticQueue<Proceso>& Scheduler::getBloqueadosQueue() { return bloqueado; }
+StaticQueue<Proceso>& Scheduler::getSuspendidosQueue() { return suspendidos; }
 StaticQueue<Proceso>& Scheduler::getTerminadosQueue() { return terminado; }
 const deque<Proceso>& Scheduler::getGestorProcesos() const { return gestorProcesos; }

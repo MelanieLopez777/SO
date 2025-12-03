@@ -50,7 +50,8 @@ std::string Proceso::toString(estadoProceso etapa) const {
 
     switch (etapa) {
     case estadoProceso::NUEVO:
-        oss << "ID: " << this->id;
+        oss << "ID: " << this->id << " "
+            << "Tam: " << this->tamanio;
         break;
 
     case estadoProceso::LISTO:
@@ -72,6 +73,14 @@ std::string Proceso::toString(estadoProceso etapa) const {
         oss << "TB: " <<this->reloj.getBlockedTime();
         break;
 
+    case estadoProceso::SUSPENDIDO:
+        oss << "ID: " << this->id <<" | "
+            << "Op: " << this->calculadora.operacionToString() << " | "
+            << "TME: " << this->reloj.getEstimatedTimeAmount() << " | "
+            << "TT: " << this->reloj.getElapsedTime() << " | "
+            << "TR: " << (this->reloj.getEstimatedTimeAmount() - this->reloj.getElapsedTime()) << " | "
+            << "Tam: " << this->tamanio << "\n";
+        break;
     case estadoProceso::TERMINADO:
         oss << "ID: " << this->id << "  "
             << "Op: " << this->calculadora.operacionToString() << "  "
@@ -80,6 +89,34 @@ std::string Proceso::toString(estadoProceso etapa) const {
                 ? "ERROR"
                 : std::to_string(this->calculadora.dameResultado()));
         break;
+    }
+    return oss.str();
+}
+
+std::string Proceso::estadoToString() const {
+    std::ostringstream oss;
+    switch(this->estado)
+    {
+        case estadoProceso::NUEVO:
+            oss << "Nuevo";
+        break;
+        case estadoProceso::LISTO:
+            oss << "Listo";
+        break;
+        case estadoProceso::EJECUCION:
+            oss << "Ejecucion";
+        break;
+        case estadoProceso::BLOQUEADO:
+            oss << "Bloqueado";
+        break;
+        case estadoProceso::SUSPENDIDO:
+            oss << "Suspendido";
+        break;
+        case estadoProceso::TERMINADO:
+            oss << "Terminado";
+        break;
+        default:
+            oss << "Error de estado!";
     }
     return oss.str();
 }

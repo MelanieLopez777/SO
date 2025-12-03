@@ -38,14 +38,7 @@ void BCPWindow::cargarDatos(const std::deque<Proceso>& procesos)
         Calculadora calc = p.dameCalculadora();
         estadoProceso estado = p.dameEstado();
 
-        QString estadoStr;
-        switch(estado) {
-            case estadoProceso::NUEVO:      estadoStr = "Nuevo"; break;
-            case estadoProceso::LISTO:      estadoStr = "Listo"; break;
-            case estadoProceso::EJECUCION:  estadoStr = "Ejecución"; break;
-            case estadoProceso::BLOQUEADO:  estadoStr = "Bloqueado"; break;
-            case estadoProceso::TERMINADO:  estadoStr = "Terminado"; break;
-        }
+        QString estadoStr = QString::fromStdString(p.estadoToString());
 
         QString resultadoStr = "N/A";
         if (estado == estadoProceso::TERMINADO) {

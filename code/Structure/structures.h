@@ -19,6 +19,7 @@ enum class estadoProceso {
     LISTO,
     EJECUCION,
     BLOQUEADO,
+    SUSPENDIDO,
     TERMINADO
 };
 
@@ -47,4 +48,5 @@ public:
     int dameTamanio() const;
     estadoProceso dameEstado() const;
     std::string toString(estadoProceso etapa) const;
+    std::string estadoToString() const;
 };

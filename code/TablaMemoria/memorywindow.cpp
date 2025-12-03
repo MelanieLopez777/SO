@@ -4,7 +4,7 @@ MemoryWindow::MemoryWindow(const Marco* memoria, int marcosLibres, QWidget *pare
     : QDialog(parent)
 {
     this->setWindowTitle("Tabla de Paginación");
-    this->resize(485, 855);
+    this->resize(740, 855);
 
     QVBoxLayout *layout = new QVBoxLayout(this);
 
@@ -27,22 +27,25 @@ MemoryWindow::MemoryWindow(const Marco* memoria, int marcosLibres, QWidget *pare
 
 void MemoryWindow::configurarTabla()
 {
-    tableWidget->setColumnCount(6);
-    tableWidget->setHorizontalHeaderLabels({"Marco", "Estado", "Uso", "Marco", "Estado", "Uso"});
+    tableWidget->setColumnCount(8);
+    tableWidget->setHorizontalHeaderLabels({"Marco", "Proceso", "Estado", "Uso", "Marco", "Proceso", "Estado", "Uso"});
     tableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tableWidget->verticalHeader()->setVisible(false);
     tableWidget->setSelectionMode(QAbstractItemView::NoSelection);
 
     int anchoMarco = 60;
+    int anchoProceso = 120;
     int anchoEstado = 120;
     int anchoPag = 50;
 
     tableWidget->setColumnWidth(0, anchoMarco);
-    tableWidget->setColumnWidth(1, anchoEstado);
-    tableWidget->setColumnWidth(2, anchoPag);
-    tableWidget->setColumnWidth(3, anchoMarco);
-    tableWidget->setColumnWidth(4, anchoEstado);
-    tableWidget->setColumnWidth(5, anchoPag);
+    tableWidget->setColumnWidth(1, anchoProceso);
+    tableWidget->setColumnWidth(2, anchoEstado);
+    tableWidget->setColumnWidth(3, anchoPag);
+    tableWidget->setColumnWidth(4, anchoMarco);
+    tableWidget->setColumnWidth(5, anchoProceso);
+    tableWidget->setColumnWidth(6, anchoEstado);
+    tableWidget->setColumnWidth(7, anchoPag);
 
     tableWidget->verticalHeader()->setDefaultSectionSize(30);
 }
@@ -61,39 +64,49 @@ void MemoryWindow::cargarDatos(const Marco* memoria)
         tableWidget->setItem(fila, colOffset + 0, itemMarco);
 
         // Datos
+        QString procesoStr;
         QString estadoStr;
         QString usoStr = "-";
         QColor colorFondo;
         const Marco& m = memoria[indexMemoria];
 
         if (m.idProceso == -2) { // SO
-            estadoStr = "S.O.";
+            procesoStr = "S.O.";
             colorFondo = QColor(200, 200, 200);
+            estadoStr = "N/A";
             usoStr = "5/5";
         } else if (m.libre) { // Libre
-            estadoStr = "Libre";
+            procesoStr = "Libre";
             colorFondo = QColor(200, 255, 200);
+            estadoStr = "N/A";
         } else { // Ocupado
-            estadoStr = QString("P%1").arg(m.idProceso);
+            procesoStr = QString("P%1").arg(m.idProceso);
             usoStr = QString("%1/5").arg(m.espacioOcupado);
+            estadoStr = QString::fromStdString(m.estadoStr);
             colorFondo = QColor(100, 180, 255);
         }
+
+        QTableWidgetItem* itemProceso = new QTableWidgetItem(procesoStr);
+        itemProceso->setBackground(colorFondo);
+        itemProceso->setForeground(Qt::black);
+        itemProceso->setTextAlignment(Qt::AlignCenter);
+        tableWidget->setItem(fila, colOffset + 1, itemProceso);
 
         QTableWidgetItem* itemEstado = new QTableWidgetItem(estadoStr);
         itemEstado->setBackground(colorFondo);
         itemEstado->setForeground(Qt::black);
         itemEstado->setTextAlignment(Qt::AlignCenter);
-        tableWidget->setItem(fila, colOffset + 1, itemEstado);
+        tableWidget->setItem(fila, colOffset + 2, itemEstado);
 
         QTableWidgetItem* itemUso = new QTableWidgetItem(usoStr);
         itemUso->setBackground(colorFondo);
         itemUso->setForeground(Qt::black);
         itemUso->setTextAlignment(Qt::AlignCenter);
-        tableWidget->setItem(fila, colOffset + 2, itemUso);
+        tableWidget->setItem(fila, colOffset + 3, itemUso);
     };
 
     for (int i = 0; i < 24; ++i) {
         llenarCelda(i, 0, i);      // Izquierda
-        llenarCelda(i, 3, i + 24); // Derecha
+        llenarCelda(i, 4, i + 24); // Derecha
     }
 }

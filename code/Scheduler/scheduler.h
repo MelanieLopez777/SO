@@ -4,6 +4,9 @@
 #include <QTimer>
 #include <QDebug>
 #include <deque>
+#include <QFile>
+#include <QTextStream>
+#include <QMessageBox>
 #include "../Structure/structures.h"
 #include "../Queue/queue.h"
 #include "../Generador/generadorDatos.h"
@@ -15,6 +18,7 @@ struct Marco {
     int numeroPagina = -1;
     int espacioOcupado = 0;
     bool libre = true;
+    string estadoStr = "N/A";
 };
 
 class Scheduler : public QObject
@@ -31,6 +35,7 @@ public:
     StaticQueue<Proceso>& getNuevosQueue();
     StaticQueue<Proceso>& getListosQueue();
     StaticQueue<Proceso>& getBloqueadosQueue();
+    StaticQueue<Proceso>& getSuspendidosQueue();
     StaticQueue<Proceso>& getTerminadosQueue();
     const deque<Proceso>& getGestorProcesos() const;
     const Marco* getMemoria() const { return memoria; }
@@ -46,6 +51,9 @@ public slots:
     void injectProcess();
     void interruptProcess();
     void errorProcess();
+
+    void suspendProcess();
+    void returnProcess();
 
 signals:
     // Notificaciones a la GUI
@@ -70,13 +78,16 @@ private:
     StaticQueue<Proceso> nuevos;
     StaticQueue<Proceso> pendientes;
     StaticQueue<Proceso> bloqueado;
+    StaticQueue<Proceso> suspendidos;
     StaticQueue<Proceso> terminado;
     Proceso *ejecucion;
 
     void inicializarMemoria();
+    void actualizarEstadoEnMarcos(int id, string nuevoEstado);
     bool hayEspacioPara(int tamanio);
     void asignarMemoria(Proceso* p);
     void liberarMemoria(Proceso* p);
+    void guardarArchivoSuspendidos();
 
     void cargarNuevosAListos();
     void manejarProcesoEnEjecucion();
